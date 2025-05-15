@@ -28,6 +28,28 @@
                         </div>
                     </div>
                 </div>
+                
+            </div>
+            <div class="dashboard-card">
+                <h3>Blacklisted Words</h3>
+                <form action="/blacklist_word" method="POST" class="blacklist-form">
+                    <div class="form-group">
+                        <label for="blacklist-word">Enter a word to blacklist:</label>
+                        <input type="text" id="blacklist-word" name="word" placeholder="Enter a word" required>
+                    </div>
+                    <button type="submit" class="btn">Submit</button>
+                </form>
+                <div class="blacklist-scroll">
+                    <h4>Your Submitted Words</h4>
+                    <ul id="blacklist-words">
+                        {% for word in user_blacklist %}
+                            <li>
+                                <span class="blacklist-word">{{ word.word }}</span>
+                                <span class="blacklist-status {{ word.status }}">{{ word.status|title }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     {% endif %}

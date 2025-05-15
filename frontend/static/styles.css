@@ -1656,6 +1656,7 @@ button:hover {
     }
 }
 
+<<<<<<< HEAD
 /* Selection styles */
 .selection-hint {
     color: #666;
@@ -1884,3 +1885,197 @@ button:hover {
         max-width: none;
     }
 }
+=======
+/* Center the Blacklist Section */
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    text-align: center; /* Center text inside the container */
+}
+
+.blacklist-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    color: #333;
+    width: 100%; /* Ensure it spans the full width of the container */
+}
+
+.blacklist-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the form elements horizontally */
+    gap: 1rem;
+    width: 100%; /* Ensure the form spans the full width of the container */
+}
+
+.blacklist-form .form-group {
+    width: 100%;
+    max-width: 400px; /* Limit the width of the input box */
+}
+
+#blacklist-word {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+.blacklist-form .btn {
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+}
+
+.blacklist-scroll {
+    margin-top: 1rem;
+    max-height: 200px; /* Limit the height of the scrollable area */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.blacklist-scroll h4 {
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+#blacklist-words {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#blacklist-words li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#blacklist-words li:last-child {
+    border-bottom: none;
+}
+
+.blacklist-word {
+    font-weight: bold;
+    color: #333;
+}
+
+.blacklist-status {
+    font-size: 0.9rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.blacklist-status.pending {
+    background-color: #ffeb3b;
+    color: #333;
+}
+
+.blacklist-status.accepted {
+    background-color: #4caf50;
+    color: white;
+}
+
+.blacklist-status.rejected {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Admin Page Styles */
+.admin-container {
+    margin: 2rem auto;
+    max-width: 800px;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.admin-container h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    color: #333;
+}
+
+.blacklist-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.blacklist-table th, .blacklist-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.blacklist-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.blacklist-table .status.pending {
+    color: #ff9800;
+}
+
+.blacklist-table .status.accepted {
+    color: #4caf50;
+}
+
+.blacklist-table .status.rejected {
+    color: #f44336;
+}
+
+.btn-accept, .btn-reject {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn-accept {
+    background-color: #4caf50;
+    color: white;
+}
+
+.btn-reject {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Style for approved status */
+.blacklist-status.approved {
+    background-color: #4caf50; /* Green background */
+    color: white; /* White text */
+    padding: 2px 6px; /* Add padding for better appearance */
+    border-radius: 4px; /* Rounded corners */
+    font-size: 0.9rem; /* Match the font size of rejected */
+    text-transform: capitalize; /* Capitalize the first letter */
+}
+
+.blacklist-table .status.pending {
+    color: #ff9800; /* Orange for pending */
+}
+
+.blacklist-table .status.approved {
+    color: #4caf50; /* Green for approved */
+}
+
+.blacklist-table .status.rejected {
+    color: #f44336; /* Red for rejected */
+}
+>>>>>>> rajiv

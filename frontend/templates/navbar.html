@@ -2,7 +2,11 @@
     <div class="navbar-brand">LLMScribe</div>
     <ul class="navbar-links">
         <li><a href="{{ url_for('main.home') }}">Home</a></li>
+<<<<<<< HEAD
         <li><a href="{{ url_for('main.feature') }}">Features</a></li>
+=======
+        <li><a href="{{ url_for('main.admin') }}">Admin</a></li>
+>>>>>>> rajiv
         <li><a href="{{ url_for('main.pricing') }}">Pricing</a></li>
         {% if current_user.is_authenticated %}
             <li>
