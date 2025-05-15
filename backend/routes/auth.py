@@ -70,16 +70,3 @@ def logout():
     logout_user()
     flash('You have been logged out successfully.', 'success')
     return redirect(url_for('main.home'))
-
-@auth_bp.route('/upgrade', methods=['POST'])
-@login_required
-def upgrade_account():
-    if current_user.user_type != 'free':
-        flash('Already a paid user', 'info')
-        return redirect(url_for('main.home'))
-    
-    current_user.user_type = 'paid'
-    current_user.balance = 100.0  # Initial tokens
-    db.session.commit()
-    flash('Upgraded to paid account with 100 tokens!', 'success')
-    return redirect(url_for('main.home'))

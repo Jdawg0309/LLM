@@ -21,7 +21,10 @@
           <li>Best for light usage</li>
           <li>No expiry on tokens</li>
         </ul>
-        <a href="{{ url_for('auth.upgrade_account') }}?tier=basic" class="btn">Purchase Tokens</a>
+        <form action="/upgrade_with_50" method="POST">
+          <input type="hidden" name="user_id" value="{{ current_user.id }}">
+          <button type="submit" class="btn">Get Started</button>
+        </form>
       </div>
 
       <div class="pricing-card plus">
@@ -35,7 +38,10 @@
           <li>Best for regular usage</li>
           <li>No expiry on tokens</li>
         </ul>
-        <a href="{{ url_for('auth.upgrade_account') }}?tier=plus" class="btn">Purchase Tokens</a>
+        <form action="/upgrade_with_120" method="POST">
+          <input type="hidden" name="user_id" value="{{ current_user.id }}">
+          <button type="submit" class="btn">Get Started</button>
+        </form>
       </div>
 
       <div class="pricing-card pro">
@@ -49,7 +55,10 @@
           <li>Best for heavy usage</li>
           <li>No expiry on tokens</li>
         </ul>
-        <a href="{{ url_for('auth.upgrade_account') }}?tier=pro" class="btn">Purchase Tokens</a>
+        <form action="/upgrade_with_300" method="POST">
+          <input type="hidden" name="user_id" value="{{ current_user.id }}">
+          <button type="submit" class="btn">Get Started</button>
+        </form>
       </div>
     </div>
   </div>

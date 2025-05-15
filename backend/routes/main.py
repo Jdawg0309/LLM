@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template
-from flask_login import current_user
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import current_user, login_required
 from backend.models import User, TokenTransaction, Blacklist, CorrectionHistory  # Updated import path
 from backend import db
 
@@ -19,3 +19,63 @@ def home():
 @main_bp.route('/pricing')
 def pricing():
     return render_template('pricing.html')
+
+@main_bp.route('/upgrade_with_50', methods=['POST'])
+@login_required
+def paid_50():
+    user_id = request.form.get('user_id')  # Get user ID from the form
+    if not user_id or int(user_id) != current_user.id:
+        flash('Invalid request.', 'error')
+        return redirect(url_for('main.pricing'))
+
+    # Update the user's type and balance
+    user = User.query.get(current_user.id)
+    if user:
+        user.user_type = 'paid'
+        user.balance += 50
+        db.session.commit()
+        flash('You have been upgraded to the Paid Plan, and 50 tokens have been added!', 'success')
+    else:
+        flash('User not found.', 'error')
+
+    return redirect(url_for('main.pricing'))
+
+@main_bp.route('/upgrade_with_120', methods=['POST'])
+@login_required
+def paid_120():
+    user_id = request.form.get('user_id')  # Get user ID from the form
+    if not user_id or int(user_id) != current_user.id:
+        flash('Invalid request.', 'error')
+        return redirect(url_for('main.pricing'))
+
+    # Update the user's type and balance
+    user = User.query.get(current_user.id)
+    if user:
+        user.user_type = 'paid'  
+        user.balance += 120
+        db.session.commit()
+        flash('You have been upgraded to the Pro Plan, and 120 tokens have been added!', 'success')
+    else:
+        flash('User not found.', 'error')
+
+    return redirect(url_for('main.pricing'))
+
+@main_bp.route('/upgrade_with_300', methods=['POST'])
+@login_required
+def paid_300():
+    user_id = request.form.get('user_id')  # Get user ID from the form
+    if not user_id or int(user_id) != current_user.id:
+        flash('Invalid request.', 'error')
+        return redirect(url_for('main.pricing'))
+
+    # Update the user's type and balance
+    user = User.query.get(current_user.id)
+    if user:
+        user.user_type = 'paid'  
+        user.balance += 300
+        db.session.commit()
+        flash('You have been upgraded to the Pro Plan, and 300 tokens have been added!', 'success')
+    else:
+        flash('User not found.', 'error')
+
+    return redirect(url_for('main.pricing'))
