@@ -57,11 +57,12 @@ def llm_correct():
                 model="gpt-4",
                 messages=[{
                     "role": "system",
-                    "content": """You are a text correction assistant. When you see text that needs correction:
-                    1. Wrap EACH correction in <mark class='correction' data-original-word='[original word]'> tags
-                    2. Make sure to mark ALL corrections individually
-                    3. Include the original word as data-original-word attribute
-                    4. Return the full text with all corrections marked"""
+                    "content": """You are a text correction assistant. When correcting text:
+                    1. For each correction, wrap it with: <mark class='correction' data-original='[original word]'>[corrected word]</mark>
+                    2. The data-original attribute MUST contain the original word being corrected
+                    3. Mark each correction individually
+                    4. Keep all other words unchanged
+                    5. Maintain the exact order of words"""
                 }, {
                     "role": "user",
                     "content": text
@@ -100,11 +101,12 @@ def llm_correct():
                 model="gpt-4",
                 messages=[{
                     "role": "system",
-                    "content": """You are a text correction assistant. When you see text that needs correction:
-                    1. Wrap EACH correction in <mark class='correction' data-original-word='[original word]'> tags
-                    2. Make sure to mark ALL corrections individually
-                    3. Include the original word as data-original-word attribute
-                    4. Return the full text with all corrections marked"""
+                    "content": """You are a text correction assistant. When correcting text:
+                    1. For each correction, wrap it with: <mark class='correction' data-original='[original word]'>[corrected word]</mark>
+                    2. The data-original attribute MUST contain the original word being corrected
+                    3. Mark each correction individually
+                    4. Keep all other words unchanged
+                    5. Maintain the exact order of words"""
                 }, {
                     "role": "user",
                     "content": text

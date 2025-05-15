@@ -541,17 +541,14 @@ function processText(correctionType) {
             rejectButton.addEventListener('click', function() {
                 if (!selectedText) return;
 
-                // Find the original text for this selection
-                const originalWords = data.original.split(/\s+/);
-                const correctedWords = data.corrected.replace(/<\/?mark[^>]*>/g, '').split(/\s+/);
-                let originalWord = '';
+                // Get the mark element that contains the selected text
+                const selectedMark = Array.from(correctedContent.getElementsByTagName('mark'))
+                    .find(mark => mark.textContent === selectedText);
 
-                // Find the original word by position
-                const selectedIndex = Array.from(correctedContent.getElementsByTagName('mark'))
-                    .findIndex(mark => mark.textContent === selectedText);
-                if (selectedIndex !== -1) {
-                    originalWord = originalWords[selectedIndex];
-                }
+                if (!selectedMark) return;
+
+                // Get the original word from the data-original attribute
+                const originalWord = selectedMark.getAttribute('data-original');
 
                 fetch('/editor/handle-decision', {
                     method: 'POST',
@@ -577,16 +574,8 @@ function processText(correctionType) {
                             </div>`;
 
                         // Replace the marked correction with original word
-                        const marks = correctedContent.getElementsByTagName('mark');
-                        for (let mark of marks) {
-                            if (mark.textContent === selectedText) {
-                                // Get the original word from our mapping
-                                const originalWord = originalWords[selectedIndex];
-                                const textNode = document.createTextNode(originalWord);
-                                mark.parentNode.replaceChild(textNode, mark);
-                                break;
-                            }
-                        }
+                        const textNode = document.createTextNode(originalWord);
+                        selectedMark.parentNode.replaceChild(textNode, selectedMark);
 
                         // Only remove buttons if no more corrections exist
                         const remainingCorrections = correctedContent.getElementsByTagName('mark');

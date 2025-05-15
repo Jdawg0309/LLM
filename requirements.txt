@@ -5,3 +5,5 @@ flask-login
 python-dotenv 
 pymysql
 openai
+flask_socketio
+eventlet
