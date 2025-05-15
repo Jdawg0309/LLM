@@ -5,35 +5,201 @@
 {% block content %}
 <div class="container admin-container">
     <h1>Admin Panel</h1>
-    <p>Manage blacklisted word submissions</p>
+    
+    <!-- Blacklist Management Section -->
+    <section class="admin-section">
+        <h2>Blacklist Management</h2>
+        <p>Manage blacklisted word submissions</p>
 
-    <table class="blacklist-table">
-        <thead>
-            <tr>
-                <th>Word</th>
-                <th>Status</th>
-                <th>Submitted By</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for word_id, word, status, username, email in blacklisted_words %}
+        <table class="blacklist-table">
+            <thead>
                 <tr>
-                    <td>{{ word }}</td>
-                    <td class="status {{ status }}">{{ status|title }}</td>
-                    <td>{{ username }} ({{ email }})</td>
-                    <td>
-                        <form action="{{ url_for('main.accept_word', word_id=word_id) }}" method="POST" style="display: inline;">
-                            <button type="submit" class="btn-accept">Accept</button>
+                    <th>Word</th>
+                    <th>Status</th>
+                    <th>Submitted By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for word_id, word, status, username, email in blacklisted_words %}
+                    <tr>
+                        <td>{{ word }}</td>
+                        <td class="status {{ status }}">{{ status|title }}</td>
+                        <td>{{ username }} ({{ email }})</td>
+                        <td>
+                            <form action="{{ url_for('main.accept_word', word_id=word_id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn-accept">Accept</button>
+                            </form>
+
+                            <form action="{{ url_for('main.reject_word', word_id=word_id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn-reject">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Rejection Review Section -->
+    <section class="admin-section">
+        <h2>Rejection Reviews</h2>
+        <p>Review submitted rejection reasons</p>
+
+        <div class="rejection-reviews">
+            {% for correction in corrections %}
+                <div class="rejection-card">
+                    <div class="rejection-header">
+                        <span class="submitted-by">Submitted by: {{ correction.user.email }}</span>
+                        <span class="submission-date">{{ correction.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </div>
+                    
+                    <div class="rejection-content">
+                        <div class="text-block">
+                            <strong>Original Text:</strong>
+                            <p>{{ correction.original_text }}</p>
+                        </div>
+                        
+                        <div class="text-block">
+                            <strong>Corrected Text:</strong>
+                            <p>{{ correction.corrected_text }}</p>
+                        </div>
+                        
+                        <div class="text-block">
+                            <strong>Rejection Reason:</strong>
+                            <p>{{ correction.rejection_reason }}</p>
+                        </div>
+                    </div>
+
+                    <div class="rejection-actions">
+                        <form action="{{ url_for('main.review_rejection', rejection_id=correction.id, decision='accept') }}" 
+                              method="POST" style="display: inline;">
+                            <button type="submit" class="btn-accept">
+                                Accept Reason (-1 token)
+                            </button>
                         </form>
 
-                        <form action="{{ url_for('main.reject_word', word_id=word_id) }}" method="POST" style="display: inline;">
-                            <button type="submit" class="btn-reject">Reject</button>
+                        <form action="{{ url_for('main.review_rejection', rejection_id=correction.id, decision='reject') }}" 
+                              method="POST" style="display: inline;">
+                            <button type="submit" class="btn-reject">
+                                Reject Reason (-5 tokens)
+                            </button>
                         </form>
-                    </td>
-                </tr>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-rejections">
+                    <p>No pending rejection reviews.</p>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </section>
 </div>
+
+<style>
+/* Admin Sections */
+.admin-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.admin-section h2 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+/* Rejection Card Styles */
+.rejection-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.rejection-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.submitted-by {
+    font-weight: 500;
+    color: #495057;
+}
+
+.submission-date {
+    color: #6c757d;
+}
+
+.rejection-content {
+    margin-bottom: 1.5rem;
+}
+
+.text-block {
+    margin-bottom: 1.5rem;
+}
+
+.text-block strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.text-block p {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.rejection-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.rejection-actions button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.rejection-actions .btn-accept {
+    background: #28a745;
+    color: white;
+}
+
+.rejection-actions .btn-reject {
+    background: #dc3545;
+    color: white;
+}
+
+.rejection-actions button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-rejections {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+</style>
 {% endblock %}

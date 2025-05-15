@@ -202,6 +202,33 @@ def handle_decision():
         'corrected_text': correction.corrected_text  # Return the full corrected text
     })
 
+@editor_bp.route('/handle-rejection', methods=['POST'])
+@login_required
+def handle_rejection():
+    data = request.get_json()
+    original_text = data.get('original_text')
+    rejection_reason = data.get('rejection_reason')
+
+    correction = CorrectionHistory.query.filter_by(
+        user_id=current_user.id,
+        original_text=original_text
+    ).order_by(CorrectionHistory.timestamp.desc()).first()
+
+    if not correction:
+        return jsonify({'error': 'Correction not found'}), 404
+
+    # Update correction status and reason
+    correction.status = 'rejected'
+    correction.rejection_reason = rejection_reason
+    correction.final_text = original_text  # Use original text since all corrections were rejected
+    
+    db.session.commit()
+    
+    return jsonify({
+        'new_balance': current_user.balance,
+        'original_text': original_text
+    })
+
 def save_correction(original, corrected, correction_type, tokens=0):
     correction = CorrectionHistory(
         user_id=current_user.id,
@@ -264,6 +291,35 @@ def self_correct():
         "corrected": highlighted_text,
         "token_cost": token_cost
     })
+
+@editor_bp.route('/save-corrected', methods=['POST'])
+@login_required
+def save_corrected():
+    if current_user.user_type != 'paid':
+        return jsonify({'error': 'Only paid users can use the save feature.'}), 403
+
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'No text to save.'}), 400
+
+    if current_user.balance < 5:
+        return jsonify({'error': 'Insufficient tokens to save. You need at least 5 tokens.'}), 402
+
+    current_user.balance -= 5
+    transaction = TokenTransaction(
+        user_id=current_user.id,
+        amount=5,
+        transaction_type='save'
+    )
+    db.session.add(transaction)
+    db.session.commit()
+    try:
+        current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
+    except Exception:
+        pass
+
+    return jsonify({'success': True, 'balance': current_user.balance})
 
 def process_input(user_id, input_text):
     # Fetch all accepted blacklisted words for the user
