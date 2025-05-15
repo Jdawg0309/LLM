@@ -61,10 +61,17 @@
                               placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
                     
                     <div class="action-bar">
+                        <!-- AI Correction Button -->
                         <button id="llm-correct" class="send-button" title="AI Correct">
-                            <i class="fas fa-paper-plane"></i>
+                            <i class="fas fa-robot"></i> AI Correct
+                        </button>
+
+                        <!-- Self-Correction Button -->
+                        <button id="self-correct" class="send-button" title="Self Correct">
+                            <i class="fas fa-user-edit"></i> Self Correct
                         </button>
                     </div>
+
                 </div>
 
                 {% if current_user.user_type == 'free' %}
@@ -87,6 +94,12 @@ document.getElementById('llm-correct').addEventListener('click', function(e) {
     processText('llm');
 });
 
+document.getElementById('self-correct').addEventListener('click', function(e) {
+    e.preventDefault();
+    processText('self');
+});
+
+
 function processText(correctionType) {
     // Add authentication check
     {% if not current_user.is_authenticated %}
@@ -99,6 +112,23 @@ function processText(correctionType) {
     const input = document.getElementById('text-input');
     const resultsPanel = document.getElementById('correction-results');
     const text = input.value.trim();
+
+    let payload = {
+    text: text,
+    correction_type: correctionType
+    };
+
+    // For self-correction, prompt for edited version
+    if (correctionType === 'self') {
+        const userEdited = prompt("Please enter your self-corrected version of the text:");
+        if (!userEdited || userEdited.trim().length === 0) {
+            alert("You must provide a corrected version.");
+            return;
+        }
+        payload.original = text;
+        payload.corrected = userEdited.trim();
+    }
+
     
     if (!text) {
         alert('Please enter some text');
@@ -113,10 +143,8 @@ function processText(correctionType) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            text: text,
-            correction_type: correctionType
-        }),
+        body: JSON.stringify(payload),
+
     })
     .then(response => response.json())
     .then(data => {
@@ -148,15 +176,24 @@ function processText(correctionType) {
                 <div class="corrected-text">
                     <strong>Corrected:</strong> ${data.corrected}
                 </div>`;
-        
+                
         if (correctionType === 'llm') {
             resultHTML += `
                 <div class="correction-actions">
                     <button class="btn-accept">Accept</button>
                     <button class="btn-reject">Reject</button>
                 </div>`;
+        } else if (correctionType === 'self') {
+            resultHTML += `
+                <div class="token-summary">
+                    <strong>Tokens Deducted:</strong> ${data.token_cost}
+                </div>`;
         }
-        
+
+        resultHTML += `</div>`;
+        resultsPanel.innerHTML = resultHTML;
+
+                
         resultHTML += `</div>`;
         resultsPanel.innerHTML = resultHTML;
     })
