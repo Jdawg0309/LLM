@@ -20,6 +20,10 @@ def home():
 def pricing():
     return render_template('pricing.html')
 
+@main_bp.route('/feature')
+def feature():
+    return render_template('feature.html')
+
 @main_bp.route('/upgrade_with_50', methods=['POST'])
 @login_required
 def paid_50():
