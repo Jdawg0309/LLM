@@ -3,60 +3,79 @@
 {% block title %}LLMScribe - Text Editor{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="editor-container">
-        <div class="chatbot-header">
-            <h2>
-                <i class="fas fa-robot"></i>
-                LLMScribe Assistant
-                <i class="fas fa-chevron-down"></i>
-            </h2>
-        </div>
-
-        {% if current_user.is_authenticated %}
-            <div class="dashboard-stats">
-                {% if current_user.user_type == 'paid' %}
-                    <div class="token-balance">
+<div class="container dashboard-layout">
+    {% if current_user.is_authenticated %}
+        <div class="sidebar">
+            <div class="dashboard-card">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3>{{ current_user.username }}</h3>
+                        <p class="user-email">{{ current_user.email }}</p>
+                        <div class="user-type-badge {{ current_user.user_type }}">
+                            {{ current_user.user_type|title }} User
+                        </div>
+                    </div>
+                </div>
+                <div class="user-stats">
+                    <div class="stat-item">
                         <i class="fas fa-coins"></i>
-                        <span>{{ current_user.balance }} tokens</span>
+                        <div class="stat-details">
+                            <span class="stat-value">{{ current_user.balance }}</span>
+                            <span class="stat-label">Tokens Available</span>
+                        </div>
                     </div>
-                {% endif %}
-            </div>
-        {% endif %}
-
-        <div class="chat-area">
-            <div class="messages-container" id="correction-results">
-                {% if current_user.is_authenticated %}
-                    <div class="bot-message">
-                        Hello {{ current_user.username }}! Please enter your text for correction.
-                    </div>
-                {% else %}
-                    <div class="bot-message">
-                        Welcome to LLMScribe. Please log in to get started.
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="input-area">
-                <textarea id="text-input" 
-                          {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
-                          placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
-                
-                <div class="action-bar">
-                    <button id="llm-correct" class="send-button" title="AI Correct">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
                 </div>
             </div>
+        </div>
+    {% endif %}
 
-            {% if current_user.user_type == 'free' %}
-                <div id="word-limit-warning" class="warning-message">
-                    ⚠️ Warning: Free users are limited to 20 words. Exceeding this limit will result in immediate logout and a 3-minute cooldown period.
+    <div class="main-content">
+        <div class="editor-container">
+            <div class="chatbot-header">
+                <h2>
+                    <i class="fas fa-robot"></i>
+                    LLMScribe Assistant
+                    <i class="fas fa-chevron-down"></i>
+                </h2>
+            </div>
+
+            <div class="chat-area">
+                <div class="messages-container" id="correction-results">
+                    {% if current_user.is_authenticated %}
+                        <div class="bot-message">
+                            Hello {{ current_user.username }}! Please enter your text for correction.
+                        </div>
+                    {% else %}
+                        <div class="bot-message">
+                            Welcome to LLMScribe. Please log in to get started.
+                        </div>
+                    {% endif %}
                 </div>
-            {% endif %}
 
-            <div class="word-counter-container">
-                <span class="word-counter">0/{% if current_user.user_type == 'free' %}20{% else %}∞{% endif %}</span>
+                <div class="input-area">
+                    <textarea id="text-input" 
+                              {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
+                              placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                    
+                    <div class="action-bar">
+                        <button id="llm-correct" class="send-button" title="AI Correct">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {% if current_user.user_type == 'free' %}
+                    <div id="word-limit-warning" class="warning-message">
+                        ⚠️ Warning: Free users are limited to 20 words. Exceeding this limit will result in immediate logout and a 3-minute cooldown period.
+                    </div>
+                {% endif %}
+
+                <div class="word-counter-container">
+                    <span class="word-counter">0/{% if current_user.user_type == 'free' %}20{% else %}∞{% endif %}</span>
+                </div>
             </div>
         </div>
     </div>

@@ -1397,3 +1397,170 @@ button:hover {
         max-width: 350px;
     }
 }
+
+/* User Dashboard Styles */
+.user-dashboard {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.user-avatar {
+    font-size: 2.5rem;
+    color: #5c4adb;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f2ff;
+    border-radius: 50%;
+}
+
+.user-details h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.25rem;
+}
+
+.user-email {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0.75rem 0;
+}
+
+.user-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.user-type-badge.free {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.user-type-badge.paid {
+    background: #cff4fc;
+    color: #055160;
+}
+
+.user-type-badge.super {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.user-stats {
+    display: flex;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    color: #ffd700;
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Dashboard Layout */
+.dashboard-layout {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    min-height: calc(100vh - 200px); /* Account for navbar and margins */
+}
+
+.sidebar {
+    flex: 0 0 300px;
+    position: sticky;
+    top: 2rem;
+    align-self: center; /* Add this to center vertically */
+    margin-left: 2rem; /* Add some space from the left edge */
+}
+
+.main-content {
+    flex: 1;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Update existing dashboard card styles */
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1); /* Enhanced shadow */
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+}
+
+/* Keep the responsive design */
+@media (max-width: 992px) {
+    .dashboard-layout {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+        position: static;
+        margin: 0 auto 2rem auto;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+        position: static;
+        margin-bottom: 2rem;
+    }
+
+    .main-content {
+        width: 100%;
+    }
+}
