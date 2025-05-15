@@ -42,6 +42,28 @@ body {
     padding: 0;
     list-style: none;
 }
+.navbar-links a {
+    position: relative;
+    text-decoration: none;
+    color: #333333; /* or your preferred color */
+
+    transition: color 0.3s ease;
+}
+
+.navbar-links a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    height: 2px;
+    background-color: #71adec; /* your underline color */
+    transition: width 0.3s ease;
+}
+
+.navbar-links a:hover::after {
+    width: 95%;
+}
 
 /* Update logout button styles to match other nav items */
 .navbar-links form {
