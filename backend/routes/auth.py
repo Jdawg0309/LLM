@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import func
 from backend.models import User  # Updated import path
 from backend import db
+from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -12,6 +13,16 @@ def login():
         email = request.form.get('email').strip().lower()
         password = request.form.get('password')
         user = User.query.filter(func.lower(User.email) == email).first()
+
+        # Check for cooldown
+        if user and user.last_submission:
+            cooldown_end = user.last_submission + timedelta(minutes=3)
+            if datetime.utcnow() < cooldown_end:
+                remaining = (cooldown_end - datetime.utcnow()).seconds
+                minutes = remaining // 60
+                seconds = remaining % 60
+                flash(f'Account is locked. Please wait {minutes}:{seconds:02d} before trying again.', 'warning')
+                return render_template('login.html', cooldown=remaining)
 
         if user and user.check_password(password):
             login_user(user, remember=request.form.get('remember', False))

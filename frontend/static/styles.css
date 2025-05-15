@@ -969,73 +969,431 @@ button:hover {
 
 /* Pricing Page */
 .pricing-container {
-  text-align: center;
-  padding: 40px 20px;
+    text-align: center;
+    padding: 40px 20px;
 }
 
 /* Header inside that container */
 .pricing-container .pricing-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .pricing-container .pricing-header p {
-  font-size: 1.2rem;
-  color: #666;
-  margin-bottom: 40px;
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 40px;
 }
 
 /* Cards wrapper */
 .pricing-container .pricing-cards {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
 }
 
 /* Individual card */
 .pricing-container .pricing-card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 30px 20px;
-  width: 300px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  text-align: center;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 30px 20px;
+    width: 300px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    text-align: center;
 }
 
 .pricing-container .pricing-card h2 {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
 }
 
 .pricing-container .pricing-card .price {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
 }
 
 .pricing-container .pricing-card ul {
-  list-style: none;
-  padding: 0;
-  margin-bottom: 20px;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
 }
 
 .pricing-container .pricing-card ul li {
-  margin-bottom: 8px;
+    margin-bottom: 8px;
 }
 
 /* Button styling (if not already defined) */
 .pricing-container .btn {
-  display: inline-block;
-  background-color: #007bff;
-  color: #fff;
-  padding: 10px 20px;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
+    display: inline-block;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
 }
 
 .pricing-container .btn:hover {
-  background-color: #0056b3;
+    background-color: #0056b3;
+}
+
+/* Add these new styles */
+#word-limit-warning {
+    display: none;
+    background: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border: 1px solid #ffeeba;
+    font-size: 0.9rem;
+}
+
+.cooldown-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.cooldown-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+#cooldown-timer {
+    font-weight: bold;
+    color: #dc3545;
+}
+
+/* Warning Message Styles */
+.warning-message {
+    background: #fff3cd;
+    color: #856404;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin: 0.5rem 1rem;
+    border: 1px solid #ffeeba;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* Pricing Page Styles */
+.pricing-container {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 2rem auto;
+    max-width: 1200px;
+}
+
+.pricing-header {
+    margin-bottom: 3rem;
+}
+
+.pricing-header h1 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.pricing-header p {
+    color: #666;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.pricing-cards {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+}
+
+.pricing-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 300px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.pricing-card h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.pricing-card .price {
+    color: #5c4adb;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+.pricing-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    flex-grow: 1;
+}
+
+.pricing-card ul li {
+    color: #666;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.pricing-card ul li:last-child {
+    border-bottom: none;
+}
+
+.pricing-card .btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pricing-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #5a6fd1, #6a439c);
+}
+
+@media (max-width: 768px) {
+    .pricing-container {
+        padding: 20px 10px;
+    }
+    
+    .pricing-header h1 {
+        font-size: 2rem;
+    }
+    
+    .pricing-card {
+        width: 100%;
+        max-width: 350px;
+    }
+}
+
+/* Pricing Page Styles */
+.pricing-container {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 2rem auto;
+}
+
+.pricing-header {
+    margin-bottom: 3rem;
+}
+
+.pricing-header h1 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.pricing-cards {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+}
+
+.pricing-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 300px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.pricing-card.basic {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #4CAF50, #45a049) border-box;
+}
+
+.pricing-card.plus {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #2196F3, #1e88e5) border-box;
+    transform: scale(1.05);
+}
+
+.pricing-card.pro {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #9C27B0, #7B1FA2) border-box;
+}
+
+.tier-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: white;
+}
+
+.pricing-card.basic .tier-badge {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.pricing-card.plus .tier-badge {
+    background: linear-gradient(135deg, #2196F3, #1e88e5);
+}
+
+.pricing-card.pro .tier-badge {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+.token-amount {
+    font-size: 1.2rem;
+    color: #666;
+    margin: 1rem 0;
+    font-weight: 500;
+}
+
+.pricing-card h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin: 1.5rem 0 0.5rem;
+}
+
+.pricing-card .price {
+    color: #1a73e8;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.pricing-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.pricing-card ul li {
+    color: #666;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.pricing-card .btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pricing-card.basic .btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.pricing-card.plus .btn {
+    background: linear-gradient(135deg, #2196F3, #1e88e5);
+    color: white;
+}
+
+.pricing-card.pro .btn {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    color: white;
+}
+
+.pricing-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Pricing Cards Container */
+.pricing-cards {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;  /* Reduced gap from 2rem */
+    flex-wrap: nowrap;
+    padding: 0rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Individual Pricing Card */
+.pricing-card {
+    flex: 1;
+    min-width: 240px;  /* Reduced from 280px */
+    max-width: 280px;  /* Reduced from 320px */
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;   /* Reduced padding from 2rem */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+/* Update font sizes for better fit */
+.pricing-card h2 {
+    font-size: 1.5rem;  /* Reduced from 1.8rem */
+}
+
+.pricing-card .price {
+    font-size: 2rem;   /* Reduced from 2.5rem */
+}
+
+.token-amount {
+    font-size: 1.1rem; /* Reduced from 1.2rem */
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .pricing-cards {
+        flex-wrap: wrap;
+    }
+    
+    .pricing-card {
+        flex: 0 1 calc(100% - 2rem);
+        max-width: 350px;
+    }
 }

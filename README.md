@@ -89,6 +89,3 @@ You can view our Design Report here: [Design Report](documentation/teamS_2ndphas
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-
-@workspace Make it so that instead of the system preventing the user from typing past 20 words, make it so that users still can type in 20 words, However a warning message will pop up stating "Free users are limited to 20 words. If you submit more than 20 words, you will be logged out immediately and a 3 minute cooldown will be put on you" or something like that. And if the user decides to try more than 20 words anyways, they get immediately logged out and can't sign in for 3 minutes

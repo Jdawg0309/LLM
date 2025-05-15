@@ -48,7 +48,13 @@
                     </button>
                 </div>
             </div>
-            
+
+            {% if current_user.user_type == 'free' %}
+                <div id="word-limit-warning" class="warning-message">
+                    ⚠️ Warning: Free users are limited to 20 words. Exceeding this limit will result in immediate logout and a 3-minute cooldown period.
+                </div>
+            {% endif %}
+
             <div class="word-counter-container">
                 <span class="word-counter">0/{% if current_user.user_type == 'free' %}20{% else %}∞{% endif %}</span>
             </div>
@@ -79,21 +85,11 @@ function processText(correctionType) {
         alert('Please enter some text');
         return;
     }
-
-    // Word limit enforcement
-    const maxWords = input.dataset.maxWords;
-    if (maxWords) {
-        const wordCount = text.split(/\s+/).length;
-        if (wordCount > maxWords) {
-            alert(`Free users limited to ${maxWords} words`);
-            return;
-        }
-    }
-
+    
     // Show loading state
     resultsPanel.innerHTML = '<div class="bot-message">Processing your text...</div>';
     
-    fetch(`/editor/${correctionType}-correct`, {  // Changed from /${correctionType}-correct
+    fetch(`/editor/${correctionType}-correct`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -106,6 +102,21 @@ function processText(correctionType) {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
+            if (data.force_logout) {
+                let timeLeft = data.cooldown;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                // Show cooldown timer first
+                showCooldownTimer(minutes, seconds);
+                
+                // Set a short delay before redirecting
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('auth.login') }}";
+                }, 5000);
+                
+                return;
+            }
             resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
             return;
         }
@@ -136,7 +147,7 @@ function processText(correctionType) {
     });
 }
 
-// Enhanced word counter with limit enforcement
+// Replace the existing word counter event listener
 document.getElementById('text-input').addEventListener('input', function(e) {
     const maxWords = this.dataset.maxWords || Infinity;
     const words = this.value.trim().split(/\s+/);
@@ -148,18 +159,30 @@ document.getElementById('text-input').addEventListener('input', function(e) {
         return;
     }
 
-    // Enforce word limit
-    if (words.length > maxWords) {
-        this.value = words.slice(0, maxWords).join(' ');
-        words.length = maxWords;
+    // Show warning if approaching limit
+    if (words.length > maxWords && maxWords !== Infinity) {
         wordCounter.classList.add('limit-reached');
-        alert(`Free users limited to ${maxWords} words`);
+        document.getElementById('word-limit-warning').style.display = 'block';
     } else {
         wordCounter.classList.remove('limit-reached');
+        document.getElementById('word-limit-warning').style.display = 'none';
     }
 
     // Update counter display
     wordCounter.textContent = `${words.length}/${maxWords !== Infinity ? maxWords : '∞'}`;
 });
+
+function showCooldownTimer(minutes, seconds) {
+    const modal = document.createElement('div');
+    modal.className = 'cooldown-modal';
+    modal.innerHTML = `
+        <div class="cooldown-content">
+            <h3>Account Locked</h3>
+            <p>You have been logged out for exceeding the word limit.</p>
+            <p>Please wait <span id="cooldown-timer">${minutes}:${seconds < 10 ? '0' : ''}${seconds}</span> before trying again.</p>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
 </script>
 {% endblock %}

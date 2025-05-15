@@ -15,3 +15,7 @@ def home():
                              correction_count=correction_count,
                              word_count=word_count)
     return render_template('index.html')
+
+@main_bp.route('/pricing')
+def pricing():
+    return render_template('pricing.html')

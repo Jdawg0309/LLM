@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app, flash, url_for
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 from datetime import datetime, timedelta
 from openai import OpenAI
 import os
@@ -14,26 +14,38 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def check_cooldown():
     if current_user.user_type == 'free' and current_user.last_submission:
-        remaining = (current_user.last_submission + 
-                    timedelta(minutes=3) - datetime.utcnow()).seconds // 60
-        if remaining > 0:
-            flash(f'Free users can only submit every 3 minutes ({remaining} min remaining)', 'warning')
-            return True
-    return False
+        cooldown_end = current_user.last_submission + timedelta(minutes=3)
+        if datetime.utcnow() < cooldown_end:
+            remaining = (cooldown_end - datetime.utcnow()).seconds
+            return True, remaining
+    return False, 0
 
 @editor_bp.route('/llm-correct', methods=['POST'])
 @login_required  # This will automatically redirect to login if user is not authenticated
 def llm_correct():
-    if check_cooldown():
-        return jsonify({'error': 'Free users can submit once every 3 minutes'}), 429
-    
     text = request.get_json().get('text', '')
     words = text.split()
     
     if current_user.user_type == 'free':
         if len(words) > 20:
-            flash('Free users limited to 20 words', 'danger')
-            return jsonify({'error': 'Free users limited to 20 words'}), 400
+            # Set last submission time
+            current_user.last_submission = datetime.utcnow()
+            db.session.commit()
+            # Force logout
+            logout_user()
+            return jsonify({
+                'error': 'Word limit exceeded',
+                'force_logout': True,
+                'cooldown': 180  # 3 minutes in seconds
+            }), 403
+
+        has_cooldown, remaining = check_cooldown()
+        if has_cooldown:
+            return jsonify({
+                'error': 'Free users can submit once every 3 minutes',
+                'cooldown': True,
+                'remaining': remaining
+            }), 429
 
         try:
             response = client.chat.completions.create(

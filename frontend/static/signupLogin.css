@@ -223,3 +223,18 @@
 input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0 30px white inset;
 }
+
+.cooldown-message {
+    background: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    text-align: center;
+    border: 1px solid #ffeeba;
+}
+
+#cooldown-timer {
+    font-weight: bold;
+    color: #dc3545;
+}

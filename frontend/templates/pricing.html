@@ -1,43 +1,55 @@
 {% extends 'base.html' %}
 
-{% block title %}Pricing - LLMScribe{% endblock %}
+{% block title %}Token Packages - LLMScribe{% endblock %}
 
 {% block content %}
   <div class="container pricing-container">
     <div class="pricing-header">
-      <h1>Pricing Plans</h1>
-      <p>Choose the plan that fits your needs.</p>
+      <h1>Token Packages</h1>
+      <p>Choose the package that best fits your needs</p>
     </div>
 
     <div class="pricing-cards">
-      <div class="pricing-card">
-        <h2>Free Plan</h2>
-        <p class="price">$0 / month</p>
+      <div class="pricing-card basic">
+        <div class="tier-badge">Basic</div>
+        <h2>Basic Package</h2>
+        <p class="price">$5</p>
+        <div class="token-amount">50 Tokens</div>
         <ul>
-          <li>Limited tokens</li>
-          <li>Ability to request words for Blacklist</li>
+          <li>$0.10 per token</li>
+          <li>Valid for 30 days</li>
+          <li>Best for light usage</li>
+          <li>No expiry on tokens</li>
         </ul>
-        <a href="#" class="btn">Get Started</a>
+        <a href="{{ url_for('auth.upgrade_account') }}?tier=basic" class="btn">Purchase Tokens</a>
       </div>
 
-      <div class="pricing-card">
-        <h2>Pro Plan</h2>
-        <p class="price">$19 / month</p>
+      <div class="pricing-card plus">
+        <div class="tier-badge">Best Value</div>
+        <h2>Plus Package</h2>
+        <p class="price">$10</p>
+        <div class="token-amount">120 Tokens</div>
         <ul>
-          <li>Ability to purchase more tokens</li>
+          <li>$0.083 per token</li>
+          <li>Valid for 30 days</li>
+          <li>Best for regular usage</li>
+          <li>No expiry on tokens</li>
         </ul>
-        <a href="#" class="btn">Get Started</a>
+        <a href="{{ url_for('auth.upgrade_account') }}?tier=plus" class="btn">Purchase Tokens</a>
       </div>
 
-      <div class="pricing-card">
-        <h2>Super Plan</h2>
-        <p class="price">$49 / month</p>
+      <div class="pricing-card pro">
+        <div class="tier-badge">Pro</div>
+        <h2>Pro Package</h2>
+        <p class="price">$20</p>
+        <div class="token-amount">300 Tokens</div>
         <ul>
-          <li>Handle complaints</li>
-          <li>Accept/deny user applications</li>
-          <li>Suspend/fine/terminate paid users</li>
+          <li>$0.067 per token</li>
+          <li>Valid for 30 days</li>
+          <li>Best for heavy usage</li>
+          <li>No expiry on tokens</li>
         </ul>
-        <a href="#" class="btn">Get Started</a>
+        <a href="{{ url_for('auth.upgrade_account') }}?tier=pro" class="btn">Purchase Tokens</a>
       </div>
     </div>
   </div>
