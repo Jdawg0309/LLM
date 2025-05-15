@@ -202,6 +202,33 @@ def handle_decision():
         'corrected_text': correction.corrected_text  # Return the full corrected text
     })
 
+@editor_bp.route('/handle-rejection', methods=['POST'])
+@login_required
+def handle_rejection():
+    data = request.get_json()
+    original_text = data.get('original_text')
+    rejection_reason = data.get('rejection_reason')
+
+    correction = CorrectionHistory.query.filter_by(
+        user_id=current_user.id,
+        original_text=original_text
+    ).order_by(CorrectionHistory.timestamp.desc()).first()
+
+    if not correction:
+        return jsonify({'error': 'Correction not found'}), 404
+
+    # Update correction status and reason
+    correction.status = 'rejected'
+    correction.rejection_reason = rejection_reason
+    correction.final_text = original_text  # Use original text since all corrections were rejected
+    
+    db.session.commit()
+    
+    return jsonify({
+        'new_balance': current_user.balance,
+        'original_text': original_text
+    })
+
 def save_correction(original, corrected, correction_type, tokens=0):
     correction = CorrectionHistory(
         user_id=current_user.id,
