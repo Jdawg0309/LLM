@@ -103,3 +103,38 @@ def blacklist_word():
 
     flash('Your suggestion has been submitted for review.', 'success')
     return redirect(url_for('main.home'))
+
+@main_bp.route('/admin')
+@login_required
+def admin():
+    # Ensure only super users can access this page
+    if current_user.user_type != 'super':
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Fetch all blacklisted words and their submitters
+    blacklisted_words = db.session.query(
+        Blacklist.id, Blacklist.word, Blacklist.status, User.username, User.email
+    ).join(User, Blacklist.submitted_by == User.id).all()
+
+    return render_template('admin.html', blacklisted_words=blacklisted_words)
+
+@main_bp.route('/reject_word/<int:word_id>', methods=['POST'])
+@login_required
+def reject_word(word_id):
+    if current_user.user_type != 'super':
+        flash('You do not have permission to perform this action.', 'error')
+        return redirect(url_for('main.admin'))
+
+    # Find the word in the database
+    word_entry = Blacklist.query.get(word_id)
+    if not word_entry:
+        flash('Word not found.', 'error')
+        return redirect(url_for('main.admin'))
+
+    # Update the status to "rejected"
+    word_entry.status = 'rejected'
+    db.session.commit()
+
+    flash(f'The word "{word_entry.word}" has been rejected.', 'success')
+    return redirect(url_for('main.admin'))
