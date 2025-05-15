@@ -172,7 +172,7 @@ def self_correct():
 
     highlighted_text = ' '.join(highlighted_corrected)
 
-    token_cost = math.floor(changes / 2)
+    token_cost = math.ceil(changes / 2)
 
     if current_user.balance < token_cost:
         return jsonify({

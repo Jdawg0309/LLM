@@ -1615,6 +1615,14 @@ button:hover {
     transition: transform 0.3s ease;
 }
 
+#self-correct-box textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    margin-top: 5px;
+}
+
+
 /* Keep the responsive design */
 @media (max-width: 992px) {
     .dashboard-layout {
