@@ -56,16 +56,36 @@
                 </div>
 
                 <div class="input-area">
-                    <textarea id="text-input" 
-                              {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
-                              placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
-                    
-                    <div class="action-bar">
+                    <!-- Original Input -->
+                    <div class="form-block">
+                        <label for="text-input"><strong>Original Text:</strong></label>
+                        <textarea id="text-input"
+                                {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
+                                placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                    </div>
+
+                    <!-- Self-Correct Block -->
+                    <div id="self-correct-box" class="form-block" style="display: none;">
+                        <label for="self-correct-input"><strong>Self-Corrected Version:</strong></label>
+                        <textarea id="self-correct-input" placeholder="Make your manual corrections here..."></textarea>
+                        <div class="button-row">
+                            <button id="submit-self-correct" class="send-button">
+                                <i class="fas fa-check-circle"></i> Submit Corrections
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Action Buttons -->
+                    <div class="action-bar button-row">
                         <button id="llm-correct" class="send-button" title="AI Correct">
-                            <i class="fas fa-paper-plane"></i>
+                            <i class="fas fa-robot"></i> AI Correct
+                        </button>
+                        <button id="self-correct" class="send-button" title="Self Correct">
+                            <i class="fas fa-user-edit"></i> Self Correct
                         </button>
                     </div>
                 </div>
+
 
                 {% if current_user.user_type == 'free' %}
                     <div id="word-limit-warning" class="warning-message">
@@ -81,14 +101,214 @@
     </div>
 </div>
 
+<style>
+    .main-content {
+        padding: 30px 20px;
+    }
+
+    .form-block {
+        margin-bottom: 20px;
+    }
+
+    .input-area textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin-top: 10px;
+    }
+
+    .send-button {
+        background-color: #5b3cc4;
+        color: white;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .send-button:hover {
+        background-color: #452a9e;
+    }
+
+    .correction-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .corrected-text mark.correction {
+        background-color: #e0ffe0;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    .word-counter-container {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        text-align: right;
+        color: #555;
+    }
+
+    .warning-message {
+        background-color: #fff3cd;
+        padding: 10px;
+        border-left: 4px solid #ffc107;
+        margin-top: 15px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    .chatbot-header {
+        background-color: #5b3cc4;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .input-area {
+    margin-top: 25px;
+}
+
+.form-block {
+    margin-bottom: 20px;
+}
+
+.input-area textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.send-button {
+    background-color: #5b3cc4;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.send-button:hover {
+    background-color: #452a9e;
+}
+
+</style>
+
+
 <script>
+// Button event bindings
 document.getElementById('llm-correct').addEventListener('click', function(e) {
     e.preventDefault();
     processText('llm');
 });
 
+document.getElementById('self-correct').addEventListener('click', function(e) {
+    e.preventDefault();
+    const originalText = document.getElementById('text-input').value.trim();
+    if (!originalText) {
+        alert("Please enter original text first.");
+        return;
+    }
+    document.getElementById('self-correct-box').style.display = 'block';
+});
+
+document.getElementById('submit-self-correct').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const original = document.getElementById('text-input').value.trim();
+    const corrected = document.getElementById('self-correct-input').value.trim();
+    const resultsPanel = document.getElementById('correction-results');
+
+    if (!corrected) {
+        alert("Please enter your corrected version.");
+        return;
+    }
+
+    resultsPanel.innerHTML = '<div class="bot-message">Processing your corrections...</div>';
+
+    fetch('/editor/self-correct', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            original: original,
+            corrected: corrected,
+            correction_type: 'self'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
+            return;
+        }
+
+        let resultHTML = `
+            <div class="correction-item">
+                <div class="original-text">
+                    <strong>Original:</strong> ${data.original}
+                </div>
+                <div class="corrected-text">
+                    <strong>Corrected:</strong> ${data.corrected}
+                </div>
+                <div class="token-summary">
+                    <strong>Tokens Deducted:</strong> ${data.token_cost}
+                </div>
+            </div>`;
+
+        resultsPanel.innerHTML = resultHTML;
+
+        document.getElementById('self-correct-input').value = '';
+        document.getElementById('self-correct-box').style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultsPanel.innerHTML = '<div class="error-message">Error processing request</div>';
+    });
+});
+
 function processText(correctionType) {
-    // Add authentication check
     {% if not current_user.is_authenticated %}
         document.getElementById('correction-results').innerHTML = 
             '<div class="bot-message error">You must be logged in to use this feature. ' +
@@ -99,15 +319,14 @@ function processText(correctionType) {
     const input = document.getElementById('text-input');
     const resultsPanel = document.getElementById('correction-results');
     const text = input.value.trim();
-    
+
     if (!text) {
         alert('Please enter some text');
         return;
     }
-    
-    // Show loading state
+
     resultsPanel.innerHTML = '<div class="bot-message">Processing your text...</div>';
-    
+
     fetch(`/editor/${correctionType}-correct`, {
         method: 'POST',
         headers: {
@@ -130,15 +349,10 @@ function processText(correctionType) {
                 let timeLeft = data.cooldown;
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
-                
-                // Show cooldown timer first
                 showCooldownTimer(minutes, seconds);
-                
-                // Set a short delay before redirecting
                 setTimeout(() => {
                     window.location.href = "{{ url_for('auth.login') }}";
                 }, 5000);
-                
                 return;
             }
             resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
@@ -164,7 +378,10 @@ function processText(correctionType) {
                 </div>
                 <div class="corrected-text" id="corrected-content">
                     <strong>Corrected:</strong> ${data.corrected}
-                </div>
+                </div>`;
+
+        if (correctionType === 'llm') {
+            resultHTML += `
                 <div class="correction-actions">
                     <button class="btn-accept" disabled>Accept</button>
                     <button class="btn-reject" disabled>Reject</button>
@@ -173,8 +390,14 @@ function processText(correctionType) {
                     Select the corrections you want to accept or reject
                 </div>
                 <div class="status-message"></div>
-            </div>`;
+        } else if (correctionType === 'self') {
+            resultHTML += `
+                <div class="token-summary">
+                    <strong>Tokens Deducted:</strong> ${data.token_cost}
+                </div>`;
+        }
 
+        resultHTML += `</div>`;
         resultsPanel.innerHTML = resultHTML;
 
         // Add selection functionality for all mark elements
@@ -376,6 +599,7 @@ document.getElementById('text-input').addEventListener('input', function(e) {
     const warningElement = document.getElementById('word-limit-warning');
     
     // Handle empty input
+
     if (this.value.trim() === '') {
         if (wordCounter) {
             wordCounter.textContent = `0/${maxWords !== Infinity ? maxWords : '∞'}`;
@@ -383,7 +607,6 @@ document.getElementById('text-input').addEventListener('input', function(e) {
         return;
     }
 
-    // Show warning if approaching limit
     if (words.length > maxWords && maxWords !== Infinity) {
         if (wordCounter) {
             wordCounter.classList.add('limit-reached');

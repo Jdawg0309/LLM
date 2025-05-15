@@ -1408,6 +1408,67 @@ button:hover {
     font-size: 1.1rem; /* Reduced from 1.2rem */
 }
 
+/* Feature page styling */
+.features-container {
+    max-width: 800px;
+    margin: 40px auto 60px auto;
+    padding: 32px 28px 24px 28px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+}
+.features-container h1 {
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 2.3rem;
+    color: #2d3748;
+    letter-spacing: 1px;
+}
+.features-section {
+    margin-bottom: 32px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.features-section:last-child {
+    border-bottom: none;
+}
+.features-section h2 {
+    color: #2563eb;
+    font-size: 1.35rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.features-section ul {
+    list-style: disc inside;
+    padding-left: 10px;
+}
+.features-section li {
+    margin-bottom: 8px;
+    font-size: 1.07rem;
+    color: #374151;
+    line-height: 1.6;
+}
+.features-section li strong {
+    color: #0d9488;
+    font-weight: 600;
+}
+@media (max-width: 600px) {
+    .features-container {
+        padding: 14px 4vw 10px 4vw;
+    }
+    .features-container h1 {
+        font-size: 1.4rem;
+    }
+    .features-section h2 {
+        font-size: 1.05rem;
+    }
+    .features-section li {
+        font-size: 0.98rem;
+    }
+}
+
+
 /* Responsive Design */
 @media (max-width: 992px) {
     .pricing-cards {
@@ -1553,6 +1614,14 @@ button:hover {
     margin-bottom: 1rem;
     transition: transform 0.3s ease;
 }
+
+#self-correct-box textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    margin-top: 5px;
+}
+
 
 /* Keep the responsive design */
 @media (max-width: 992px) {

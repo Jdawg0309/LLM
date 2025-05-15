@@ -2,7 +2,7 @@
     <div class="navbar-brand">LLMScribe</div>
     <ul class="navbar-links">
         <li><a href="{{ url_for('main.home') }}">Home</a></li>
-        <li><a href="/features">Features</a></li>
+        <li><a href="{{ url_for('main.feature') }}">Features</a></li>
         <li><a href="{{ url_for('main.pricing') }}">Pricing</a></li>
         {% if current_user.is_authenticated %}
             <li>

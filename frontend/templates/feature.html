@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Features - LLMScribe{% endblock %}
+
+{% block content %}
+<div class="container features-container">
+    <h1>App Features</h1>
+
+    <section class="features-section">
+        <h2>User Tiers</h2>
+        <ul>
+            <li><strong>Free Users:</strong> Edit texts up to 20 words with cooldown period</li>
+            <li><strong>Paid Users:</strong> Unlimited text length with token system</li>
+            <li><strong>Super Users:</strong> Manage user applications and handle disputes</li>
+        </ul>
+    </section>
+
+    <section class="features-section">
+        <h2>Core Functionality</h2>
+        <ul>
+            <li>Text input via typing or file upload</li>
+            <li>LLM-powered grammar and spelling correction</li>
+            <li>Interactive correction system with user approval</li>
+            <li>Blacklist word filtering</li>
+            <li>Self-correction options</li>
+            <li>Token-based economy</li>
+        </ul>
+    </section>
+
+
+    <section class="features-section">
+        <h2>Security</h2>
+        <ul>
+            <li>Secure user authentication</li>
+            <li>Token management system</li>
+            <li>Protected API integration</li>
+            <li>User activity monitoring</li>
+        </ul>
+    </section>
+</div>
+{% endblock %}
