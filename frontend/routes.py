@@ -352,3 +352,7 @@ def check_cooldown():
             flash(f'Free users can only submit every 3 minutes ({remaining} min remaining)', 'warning')
             return True
     return False
+
+@bp.route('/pricing')
+def pricing():
+    return render_template('pricing.html')
