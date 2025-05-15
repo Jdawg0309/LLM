@@ -26,6 +26,9 @@ def check_cooldown():
 def llm_correct():
     text = request.get_json().get('text', '')
     words = text.split()
+
+    # Process the input to replace blacklisted words and charge tokens
+    processed_text, tokens_charged = process_input(current_user.id, text)
     
     if current_user.user_type == 'free':
         if len(words) > 20:
@@ -57,14 +60,15 @@ def llm_correct():
                 model="gpt-4",
                 messages=[{
                     "role": "system",
-                    "content": """You are a text correction assistant. When you see text that needs correction:
-                    1. Wrap EACH correction in <mark class='correction' data-original-word='[original word]'> tags
-                    2. Make sure to mark ALL corrections individually
-                    3. Include the original word as data-original-word attribute
-                    4. Return the full text with all corrections marked"""
+                    "content": """You are a text correction assistant. When correcting text:
+                    1. For each correction, wrap it with: <mark class='correction' data-original='[original word]'>[corrected word]</mark>
+                    2. The data-original attribute MUST contain the original word being corrected
+                    3. Mark each correction individually
+                    4. Keep all other words unchanged
+                    5. Maintain the exact order of words"""
                 }, {
                     "role": "user",
-                    "content": text
+                    "content": processed_text
                 }]
             )
             corrected = response.choices[0].message.content
@@ -100,14 +104,15 @@ def llm_correct():
                 model="gpt-4",
                 messages=[{
                     "role": "system",
-                    "content": """You are a text correction assistant. When you see text that needs correction:
-                    1. Wrap EACH correction in <mark class='correction' data-original-word='[original word]'> tags
-                    2. Make sure to mark ALL corrections individually
-                    3. Include the original word as data-original-word attribute
-                    4. Return the full text with all corrections marked"""
+                    "content": """You are a text correction assistant. When correcting text:
+                    1. For each correction, wrap it with: <mark class='correction' data-original='[original word]'>[corrected word]</mark>
+                    2. The data-original attribute MUST contain the original word being corrected
+                    3. Mark each correction individually
+                    4. Keep all other words unchanged
+                    5. Maintain the exact order of words"""
                 }, {
                     "role": "user",
-                    "content": text
+                    "content": processed_text
                 }]
             )
             corrected = response.choices[0].message.content
@@ -220,3 +225,23 @@ def self_correct():
         "corrected": highlighted_text,
         "token_cost": token_cost
     })
+def process_input(user_id, input_text):
+    # Fetch all accepted blacklisted words for the user
+    blacklisted_words = Blacklist.query.filter_by(status='approved').all()
+
+    tokens_charged = 0
+    for word_entry in blacklisted_words:
+        word = word_entry.word
+        if word in input_text:
+            # Replace the word with '*' of the same length
+            input_text = input_text.replace(word, '*' * len(word))
+            # Charge tokens based on the length of the word
+            tokens_charged += len(word)
+
+    # Deduct tokens from the user's balance
+    user = User.query.get(user_id)
+    if user:
+        user.balance -= tokens_charged
+        db.session.commit()
+
+    return input_text, tokens_charged

@@ -28,6 +28,28 @@
                         </div>
                     </div>
                 </div>
+                
+            </div>
+            <div class="dashboard-card">
+                <h3>Blacklisted Words</h3>
+                <form action="/blacklist_word" method="POST" class="blacklist-form">
+                    <div class="form-group">
+                        <label for="blacklist-word">Enter a word to blacklist:</label>
+                        <input type="text" id="blacklist-word" name="word" placeholder="Enter a word" required>
+                    </div>
+                    <button type="submit" class="btn">Submit</button>
+                </form>
+                <div class="blacklist-scroll">
+                    <h4>Your Submitted Words</h4>
+                    <ul id="blacklist-words">
+                        {% for word in user_blacklist %}
+                            <li>
+                                <span class="blacklist-word">{{ word.word }}</span>
+                                <span class="blacklist-status {{ word.status }}">{{ word.status|title }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     {% endif %}
@@ -72,6 +94,16 @@
                         <textarea id="text-input"
                                 {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
                                 placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                        
+                        <!-- Main Action Buttons -->
+                        <div class="action-bar button-row">
+                            <button id="llm-correct" class="action-button ai-correct">
+                                <i class="fas fa-robot"></i> AI Correct
+                            </button>
+                            <button id="self-correct" class="action-button self-correct">
+                                <i class="fas fa-user-edit"></i> Self Correct
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Self-Correct Block -->
@@ -83,16 +115,6 @@
                                 <i class="fas fa-check-circle"></i> Submit Corrections
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Main Action Buttons -->
-                    <div class="action-bar button-row">
-                        <button id="llm-correct" class="send-button" title="AI Correct">
-                            <i class="fas fa-robot"></i> AI Correct
-                        </button>
-                        <button id="self-correct" class="send-button" title="Self Correct">
-                            <i class="fas fa-user-edit"></i> Self Correct
-                        </button>
                     </div>
                 </div>
 
@@ -541,17 +563,14 @@ function processText(correctionType) {
             rejectButton.addEventListener('click', function() {
                 if (!selectedText) return;
 
-                // Find the original text for this selection
-                const originalWords = data.original.split(/\s+/);
-                const correctedWords = data.corrected.replace(/<\/?mark[^>]*>/g, '').split(/\s+/);
-                let originalWord = '';
+                // Get the mark element that contains the selected text
+                const selectedMark = Array.from(correctedContent.getElementsByTagName('mark'))
+                    .find(mark => mark.textContent === selectedText);
 
-                // Find the original word by position
-                const selectedIndex = Array.from(correctedContent.getElementsByTagName('mark'))
-                    .findIndex(mark => mark.textContent === selectedText);
-                if (selectedIndex !== -1) {
-                    originalWord = originalWords[selectedIndex];
-                }
+                if (!selectedMark) return;
+
+                // Get the original word from the data-original attribute
+                const originalWord = selectedMark.getAttribute('data-original');
 
                 fetch('/editor/handle-decision', {
                     method: 'POST',
@@ -577,16 +596,8 @@ function processText(correctionType) {
                             </div>`;
 
                         // Replace the marked correction with original word
-                        const marks = correctedContent.getElementsByTagName('mark');
-                        for (let mark of marks) {
-                            if (mark.textContent === selectedText) {
-                                // Get the original word from our mapping
-                                const originalWord = originalWords[selectedIndex];
-                                const textNode = document.createTextNode(originalWord);
-                                mark.parentNode.replaceChild(textNode, mark);
-                                break;
-                            }
-                        }
+                        const textNode = document.createTextNode(originalWord);
+                        selectedMark.parentNode.replaceChild(textNode, selectedMark);
 
                         // Only remove buttons if no more corrections exist
                         const remainingCorrections = correctedContent.getElementsByTagName('mark');
