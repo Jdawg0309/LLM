@@ -118,7 +118,12 @@ function processText(correctionType) {
             correction_type: correctionType
         }),
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.error) {
             if (data.force_logout) {
@@ -140,55 +145,265 @@ function processText(correctionType) {
             return;
         }
 
+        // Create mapping of corrected to original words
+        const originalWords = data.original.split(/\s+/);
+        const correctionMap = new Map();
+        
+        // Parse the corrected HTML to find all marked corrections and map them
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = data.corrected;
+        const marks = tempDiv.getElementsByTagName('mark');
+        Array.from(marks).forEach((mark, index) => {
+            correctionMap.set(mark.textContent, originalWords[index]);
+        });
+
         let resultHTML = `
-            <div class="correction-item">
+            <div class="correction-item" data-original="${data.original}" data-corrections="${JSON.stringify(Array.from(correctionMap))}">
                 <div class="original-text">
                     <strong>Original:</strong> ${data.original}
                 </div>
-                <div class="corrected-text">
+                <div class="corrected-text" id="corrected-content">
                     <strong>Corrected:</strong> ${data.corrected}
-                </div>`;
-        
-        if (correctionType === 'llm') {
-            resultHTML += `
+                </div>
                 <div class="correction-actions">
-                    <button class="btn-accept">Accept</button>
-                    <button class="btn-reject">Reject</button>
-                </div>`;
-        }
-        
-        resultHTML += `</div>`;
+                    <button class="btn-accept" disabled>Accept</button>
+                    <button class="btn-reject" disabled>Reject</button>
+                </div>
+                <div class="selection-hint">
+                    Select the corrections you want to accept or reject
+                </div>
+                <div class="status-message"></div>
+            </div>`;
+
         resultsPanel.innerHTML = resultHTML;
+
+        // Add selection functionality for all mark elements
+        const correctedContent = document.getElementById('corrected-content');
+        const acceptButton = resultsPanel.querySelector('.btn-accept');
+        const rejectButton = resultsPanel.querySelector('.btn-reject');
+        const statusMessage = resultsPanel.querySelector('.status-message');
+        let selectedText = '';
+        let currentText = data.original;
+
+        correctedContent.addEventListener('mouseup', function() {
+            selectedText = window.getSelection().toString().trim();
+            if (selectedText) {
+                acceptButton.removeAttribute('disabled');
+                rejectButton.removeAttribute('disabled');
+            } else {
+                acceptButton.setAttribute('disabled', '');
+                rejectButton.setAttribute('disabled', '');
+            }
+        });
+
+        // Update the accept button handler
+        if (acceptButton) {
+            acceptButton.addEventListener('click', function() {
+                if (!selectedText) return;
+
+                fetch('/editor/handle-decision', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        original_text: data.original,
+                        selected_text: selectedText,
+                        decision: 'accept'
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        statusMessage.innerHTML = `<div class="error-message">${data.error}</div>`;
+                    } else {
+                        // Show success message
+                        statusMessage.innerHTML = `
+                            <div class="bot-message success">
+                                Correction accepted! Balance: ${data.new_balance} tokens
+                            </div>`;
+
+                        // Find the mark element containing the selected text
+                        const marks = correctedContent.getElementsByTagName('mark');
+                        for (let mark of marks) {
+                            if (mark.textContent === selectedText) {
+                                // Replace the mark with plain text
+                                const textNode = document.createTextNode(selectedText);
+                                mark.parentNode.replaceChild(textNode, mark);
+                                break;
+                            }
+                        }
+
+                        // Only remove buttons if no more corrections exist
+                        const remainingCorrections = correctedContent.getElementsByTagName('mark');
+                        if (remainingCorrections.length === 0) {
+                            const actionsDiv = resultsPanel.querySelector('.correction-actions');
+                            const selectionHint = resultsPanel.querySelector('.selection-hint');
+                            if (actionsDiv) actionsDiv.remove();
+                            if (selectionHint) selectionHint.remove();
+
+                            // When all corrections are handled, update the final text
+                            input.value = correctedContent.textContent.replace(/^Corrected:\s*/, '');
+                        }
+
+                        // Reset selection and disable buttons until new selection
+                        selectedText = '';
+                        acceptButton.setAttribute('disabled', '');
+                        rejectButton.setAttribute('disabled', '');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.innerHTML = '<div class="error-message">Error processing request</div>';
+                });
+            });
+        }
+
+        // Update the reject button handler
+        if (rejectButton) {
+            rejectButton.addEventListener('click', function() {
+                if (!selectedText) return;
+
+                // Find the original text for this selection
+                const originalWords = data.original.split(/\s+/);
+                const correctedWords = data.corrected.replace(/<\/?mark[^>]*>/g, '').split(/\s+/);
+                let originalWord = '';
+
+                // Find the original word by position
+                const selectedIndex = Array.from(correctedContent.getElementsByTagName('mark'))
+                    .findIndex(mark => mark.textContent === selectedText);
+                if (selectedIndex !== -1) {
+                    originalWord = originalWords[selectedIndex];
+                }
+
+                fetch('/editor/handle-decision', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        original_text: data.original,
+                        selected_text: selectedText,
+                        decision: 'reject',
+                        original_word: originalWord
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        statusMessage.innerHTML = `<div class="error-message">${data.error}</div>`;
+                    } else {
+                        // Show rejection message
+                        statusMessage.innerHTML = `
+                            <div class="bot-message error">
+                                Correction rejected! Balance: ${data.new_balance} tokens
+                            </div>`;
+
+                        // Replace the marked correction with original word
+                        const marks = correctedContent.getElementsByTagName('mark');
+                        for (let mark of marks) {
+                            if (mark.textContent === selectedText) {
+                                // Get the original word from our mapping
+                                const originalWord = originalWords[selectedIndex];
+                                const textNode = document.createTextNode(originalWord);
+                                mark.parentNode.replaceChild(textNode, mark);
+                                break;
+                            }
+                        }
+
+                        // Only remove buttons if no more corrections exist
+                        const remainingCorrections = correctedContent.getElementsByTagName('mark');
+                        if (remainingCorrections.length === 0) {
+                            const actionsDiv = resultsPanel.querySelector('.correction-actions');
+                            const selectionHint = resultsPanel.querySelector('.selection-hint');
+                            if (actionsDiv) actionsDiv.remove();
+                            if (selectionHint) selectionHint.remove();
+
+                            // When all corrections are handled, update the final text
+                            input.value = correctedContent.textContent.replace(/^Corrected:\s*/, '');
+                        }
+
+                        // Reset selection and disable buttons until new selection
+                        selectedText = '';
+                        acceptButton.setAttribute('disabled', '');
+                        rejectButton.setAttribute('disabled', '');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.innerHTML = '<div class="error-message">Error processing request</div>';
+                });
+            });
+        }
+
+        // Update the selection handler to ignore accepted corrections
+        correctedContent.addEventListener('mouseup', function() {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const container = range.commonAncestorContainer;
+
+            // Check if selection is within or contains an accepted correction
+            const isAcceptedCorrection = container.parentElement?.classList?.contains('accepted-correction') ||
+                                        container.classList?.contains('accepted-correction');
+            
+            if (isAcceptedCorrection) {
+                acceptButton.setAttribute('disabled', '');
+                rejectButton.setAttribute('disabled', '');
+                return;
+            }
+
+            selectedText = selection.toString().trim();
+            if (selectedText) {
+                acceptButton.removeAttribute('disabled');
+                rejectButton.removeAttribute('disabled');
+            } else {
+                acceptButton.setAttribute('disabled', '');
+                rejectButton.setAttribute('disabled', '');
+            }
+        });
     })
     .catch(error => {
         console.error('Error:', error);
-        resultsPanel.innerHTML = '<div class="error-message">Error processing request</div>';
+        resultsPanel.innerHTML = '<div class="error-message">Error processing request. Please try again.</div>';
     });
 }
 
-// Replace the existing word counter event listener
+// Update the word counter event listener
 document.getElementById('text-input').addEventListener('input', function(e) {
     const maxWords = this.dataset.maxWords || Infinity;
     const words = this.value.trim().split(/\s+/);
     const wordCounter = document.querySelector('.word-counter');
+    const warningElement = document.getElementById('word-limit-warning');
     
     // Handle empty input
     if (this.value.trim() === '') {
-        wordCounter.textContent = `0/${maxWords !== Infinity ? maxWords : '∞'}`;
+        if (wordCounter) {
+            wordCounter.textContent = `0/${maxWords !== Infinity ? maxWords : '∞'}`;
+        }
         return;
     }
 
     // Show warning if approaching limit
     if (words.length > maxWords && maxWords !== Infinity) {
-        wordCounter.classList.add('limit-reached');
-        document.getElementById('word-limit-warning').style.display = 'block';
+        if (wordCounter) {
+            wordCounter.classList.add('limit-reached');
+        }
+        if (warningElement) {
+            warningElement.style.display = 'block';
+        }
     } else {
-        wordCounter.classList.remove('limit-reached');
-        document.getElementById('word-limit-warning').style.display = 'none';
+        if (wordCounter) {
+            wordCounter.classList.remove('limit-reached');
+        }
+        if (warningElement) {
+            warningElement.style.display = 'none';
+        }
     }
 
     // Update counter display
-    wordCounter.textContent = `${words.length}/${maxWords !== Infinity ? maxWords : '∞'}`;
+    if (wordCounter) {
+        wordCounter.textContent = `${words.length}/${maxWords !== Infinity ? maxWords : '∞'}`;
+    }
 });
 
 function showCooldownTimer(minutes, seconds) {
