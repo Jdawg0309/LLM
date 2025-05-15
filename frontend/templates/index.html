@@ -71,17 +71,36 @@
                     
                     <div class="action-bar">
                         <!-- AI Correction Button -->
+                    <!-- Original Input -->
+                    <div class="form-block">
+                        <label for="text-input"><strong>Original Text:</strong></label>
+                        <textarea id="text-input"
+                                {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
+                                placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                    </div>
+
+                    <!-- Self-Correct Block -->
+                    <div id="self-correct-box" class="form-block" style="display: none;">
+                        <label for="self-correct-input"><strong>Self-Corrected Version:</strong></label>
+                        <textarea id="self-correct-input" placeholder="Make your manual corrections here..."></textarea>
+                        <div class="button-row">
+                            <button id="submit-self-correct" class="send-button">
+                                <i class="fas fa-check-circle"></i> Submit Corrections
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Action Buttons -->
+                    <div class="action-bar button-row">
                         <button id="llm-correct" class="send-button" title="AI Correct">
                             <i class="fas fa-robot"></i> AI Correct
                         </button>
-
-                        <!-- Self-Correction Button -->
                         <button id="self-correct" class="send-button" title="Self Correct">
                             <i class="fas fa-user-edit"></i> Self Correct
                         </button>
                     </div>
-
                 </div>
+
 
                 {% if current_user.user_type == 'free' %}
                     <div id="word-limit-warning" class="warning-message">
@@ -97,7 +116,142 @@
     </div>
 </div>
 
+<style>
+    .main-content {
+        padding: 30px 20px;
+    }
+
+    .form-block {
+        margin-bottom: 20px;
+    }
+
+    .input-area textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin-top: 10px;
+    }
+
+    .send-button {
+        background-color: #5b3cc4;
+        color: white;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .send-button:hover {
+        background-color: #452a9e;
+    }
+
+    .correction-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .corrected-text mark.correction {
+        background-color: #e0ffe0;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    .word-counter-container {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        text-align: right;
+        color: #555;
+    }
+
+    .warning-message {
+        background-color: #fff3cd;
+        padding: 10px;
+        border-left: 4px solid #ffc107;
+        margin-top: 15px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    .chatbot-header {
+        background-color: #5b3cc4;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .input-area {
+    margin-top: 25px;
+}
+
+.form-block {
+    margin-bottom: 20px;
+}
+
+.input-area textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.send-button {
+    background-color: #5b3cc4;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.send-button:hover {
+    background-color: #452a9e;
+}
+
+</style>
+
+
 <script>
+// Button event bindings
 document.getElementById('llm-correct').addEventListener('click', function(e) {
     e.preventDefault();
     processText('llm');
@@ -105,7 +259,12 @@ document.getElementById('llm-correct').addEventListener('click', function(e) {
 
 document.getElementById('self-correct').addEventListener('click', function(e) {
     e.preventDefault();
-    processText('self');
+    const originalText = document.getElementById('text-input').value.trim();
+    if (!originalText) {
+        alert("Please enter original text first.");
+        return;
+    }
+    document.getElementById('self-correct-box').style.display = 'block';
 });
 let uploadedFile = null;
 
@@ -151,71 +310,34 @@ document.querySelector('label[for="file-input"]').addEventListener('click', func
     } else {
         sendCorrection(input.value.trim(), correctionType);
     }
+document.getElementById('submit-self-correct').addEventListener('click', function(e) {
+    e.preventDefault();
 
-function processText(correctionType) {
-    // Add authentication check
-    {% if not current_user.is_authenticated %}
-        document.getElementById('correction-results').innerHTML = 
-            '<div class="bot-message error">You must be logged in to use this feature. ' +
-            '<a href="{{ url_for("auth.login") }}" class="login-link">Login here</a></div>';
-        return;
-    {% endif %}
-
-    const input = document.getElementById('text-input');
+    const original = document.getElementById('text-input').value.trim();
+    const corrected = document.getElementById('self-correct-input').value.trim();
     const resultsPanel = document.getElementById('correction-results');
-    const text = input.value.trim();
 
-    let payload = {
-    text: text,
-    correction_type: correctionType
-    };
-
-    // For self-correction, prompt for edited version
-    if (correctionType === 'self') {
-        const userEdited = prompt("Please enter your self-corrected version of the text:");
-        if (!userEdited || userEdited.trim().length === 0) {
-            alert("You must provide a corrected version.");
-            return;
-        }
-        payload.original = text;
-        payload.corrected = userEdited.trim();
-    }
-
-    
-    if (!text) {
-        alert('Please enter some text');
+    if (!corrected) {
+        alert("Please enter your corrected version.");
         return;
     }
-    
-    // Show loading state
-    resultsPanel.innerHTML = '<div class="bot-message">Processing your text...</div>';
-    
-    fetch(`/editor/${correctionType}-correct`, {
+
+    resultsPanel.innerHTML = '<div class="bot-message">Processing your corrections...</div>';
+
+    fetch('/editor/self-correct', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
-
+        body: JSON.stringify({
+            original: original,
+            corrected: corrected,
+            correction_type: 'self'
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            if (data.force_logout) {
-                let timeLeft = data.cooldown;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                
-                // Show cooldown timer first
-                showCooldownTimer(minutes, seconds);
-                
-                // Set a short delay before redirecting
-                setTimeout(() => {
-                    window.location.href = "{{ url_for('auth.login') }}";
-                }, 5000);
-                
-                return;
-            }
             resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
             return;
         }
@@ -227,14 +349,105 @@ function processText(correctionType) {
                 </div>
                 <div class="corrected-text">
                     <strong>Corrected:</strong> ${data.corrected}
+                </div>
+                <div class="token-summary">
+                    <strong>Tokens Deducted:</strong> ${data.token_cost}
+                </div>
+            </div>`;
+
+        resultsPanel.innerHTML = resultHTML;
+
+        document.getElementById('self-correct-input').value = '';
+        document.getElementById('self-correct-box').style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultsPanel.innerHTML = '<div class="error-message">Error processing request</div>';
+    });
+});
+
+function processText(correctionType) {
+    {% if not current_user.is_authenticated %}
+        document.getElementById('correction-results').innerHTML = 
+            '<div class="bot-message error">You must be logged in to use this feature. ' +
+            '<a href="{{ url_for("auth.login") }}" class="login-link">Login here</a></div>';
+        return;
+    {% endif %}
+
+    const input = document.getElementById('text-input');
+    const resultsPanel = document.getElementById('correction-results');
+    const text = input.value.trim();
+
+    if (!text) {
+        alert('Please enter some text');
+        return;
+    }
+
+    resultsPanel.innerHTML = '<div class="bot-message">Processing your text...</div>';
+
+    fetch(`/editor/${correctionType}-correct`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            text: text,
+            correction_type: correctionType
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            if (data.force_logout) {
+                let timeLeft = data.cooldown;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                showCooldownTimer(minutes, seconds);
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('auth.login') }}";
+                }, 5000);
+                return;
+            }
+            resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
+            return;
+        }
+
+        // Create mapping of corrected to original words
+        const originalWords = data.original.split(/\s+/);
+        const correctionMap = new Map();
+        
+        // Parse the corrected HTML to find all marked corrections and map them
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = data.corrected;
+        const marks = tempDiv.getElementsByTagName('mark');
+        Array.from(marks).forEach((mark, index) => {
+            correctionMap.set(mark.textContent, originalWords[index]);
+        });
+
+        let resultHTML = `
+            <div class="correction-item" data-original="${data.original}" data-corrections="${JSON.stringify(Array.from(correctionMap))}">
+                <div class="original-text">
+                    <strong>Original:</strong> ${data.original}
+                </div>
+                <div class="corrected-text" id="corrected-content">
+                    <strong>Corrected:</strong> ${data.corrected}
                 </div>`;
-                
+
         if (correctionType === 'llm') {
             resultHTML += `
                 <div class="correction-actions">
-                    <button class="btn-accept">Accept</button>
-                    <button class="btn-reject">Reject</button>
-                </div>`;
+                    <button class="btn-accept" disabled>Accept</button>
+                    <button class="btn-reject" disabled>Reject</button>
+                </div>
+                <div class="selection-hint">
+                    Select the corrections you want to accept or reject
+                </div>
+                <div class="status-message"></div>
         } else if (correctionType === 'self') {
             resultHTML += `
                 <div class="token-summary">
@@ -245,39 +458,233 @@ function processText(correctionType) {
         resultHTML += `</div>`;
         resultsPanel.innerHTML = resultHTML;
 
-                
-        resultHTML += `</div>`;
-        resultsPanel.innerHTML = resultHTML;
+        // Add selection functionality for all mark elements
+        const correctedContent = document.getElementById('corrected-content');
+        const acceptButton = resultsPanel.querySelector('.btn-accept');
+        const rejectButton = resultsPanel.querySelector('.btn-reject');
+        const statusMessage = resultsPanel.querySelector('.status-message');
+        let selectedText = '';
+        let currentText = data.original;
+
+        correctedContent.addEventListener('mouseup', function() {
+            selectedText = window.getSelection().toString().trim();
+            if (selectedText) {
+                acceptButton.removeAttribute('disabled');
+                rejectButton.removeAttribute('disabled');
+            } else {
+                acceptButton.setAttribute('disabled', '');
+                rejectButton.setAttribute('disabled', '');
+            }
+        });
+
+        // Update the accept button handler
+        if (acceptButton) {
+            acceptButton.addEventListener('click', function() {
+                if (!selectedText) return;
+
+                fetch('/editor/handle-decision', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        original_text: data.original,
+                        selected_text: selectedText,
+                        decision: 'accept'
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        statusMessage.innerHTML = `<div class="error-message">${data.error}</div>`;
+                    } else {
+                        // Show success message
+                        statusMessage.innerHTML = `
+                            <div class="bot-message success">
+                                Correction accepted! Balance: ${data.new_balance} tokens
+                            </div>`;
+
+                        // Find the mark element containing the selected text
+                        const marks = correctedContent.getElementsByTagName('mark');
+                        for (let mark of marks) {
+                            if (mark.textContent === selectedText) {
+                                // Replace the mark with plain text
+                                const textNode = document.createTextNode(selectedText);
+                                mark.parentNode.replaceChild(textNode, mark);
+                                break;
+                            }
+                        }
+
+                        // Only remove buttons if no more corrections exist
+                        const remainingCorrections = correctedContent.getElementsByTagName('mark');
+                        if (remainingCorrections.length === 0) {
+                            const actionsDiv = resultsPanel.querySelector('.correction-actions');
+                            const selectionHint = resultsPanel.querySelector('.selection-hint');
+                            if (actionsDiv) actionsDiv.remove();
+                            if (selectionHint) selectionHint.remove();
+
+                            // When all corrections are handled, update the final text
+                            input.value = correctedContent.textContent.replace(/^Corrected:\s*/, '');
+                        }
+
+                        // Reset selection and disable buttons until new selection
+                        selectedText = '';
+                        acceptButton.setAttribute('disabled', '');
+                        rejectButton.setAttribute('disabled', '');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.innerHTML = '<div class="error-message">Error processing request</div>';
+                });
+            });
+        }
+
+        // Update the reject button handler
+        if (rejectButton) {
+            rejectButton.addEventListener('click', function() {
+                if (!selectedText) return;
+
+                // Find the original text for this selection
+                const originalWords = data.original.split(/\s+/);
+                const correctedWords = data.corrected.replace(/<\/?mark[^>]*>/g, '').split(/\s+/);
+                let originalWord = '';
+
+                // Find the original word by position
+                const selectedIndex = Array.from(correctedContent.getElementsByTagName('mark'))
+                    .findIndex(mark => mark.textContent === selectedText);
+                if (selectedIndex !== -1) {
+                    originalWord = originalWords[selectedIndex];
+                }
+
+                fetch('/editor/handle-decision', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        original_text: data.original,
+                        selected_text: selectedText,
+                        decision: 'reject',
+                        original_word: originalWord
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        statusMessage.innerHTML = `<div class="error-message">${data.error}</div>`;
+                    } else {
+                        // Show rejection message
+                        statusMessage.innerHTML = `
+                            <div class="bot-message error">
+                                Correction rejected! Balance: ${data.new_balance} tokens
+                            </div>`;
+
+                        // Replace the marked correction with original word
+                        const marks = correctedContent.getElementsByTagName('mark');
+                        for (let mark of marks) {
+                            if (mark.textContent === selectedText) {
+                                // Get the original word from our mapping
+                                const originalWord = originalWords[selectedIndex];
+                                const textNode = document.createTextNode(originalWord);
+                                mark.parentNode.replaceChild(textNode, mark);
+                                break;
+                            }
+                        }
+
+                        // Only remove buttons if no more corrections exist
+                        const remainingCorrections = correctedContent.getElementsByTagName('mark');
+                        if (remainingCorrections.length === 0) {
+                            const actionsDiv = resultsPanel.querySelector('.correction-actions');
+                            const selectionHint = resultsPanel.querySelector('.selection-hint');
+                            if (actionsDiv) actionsDiv.remove();
+                            if (selectionHint) selectionHint.remove();
+
+                            // When all corrections are handled, update the final text
+                            input.value = correctedContent.textContent.replace(/^Corrected:\s*/, '');
+                        }
+
+                        // Reset selection and disable buttons until new selection
+                        selectedText = '';
+                        acceptButton.setAttribute('disabled', '');
+                        rejectButton.setAttribute('disabled', '');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.innerHTML = '<div class="error-message">Error processing request</div>';
+                });
+            });
+        }
+
+        // Update the selection handler to ignore accepted corrections
+        correctedContent.addEventListener('mouseup', function() {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const container = range.commonAncestorContainer;
+
+            // Check if selection is within or contains an accepted correction
+            const isAcceptedCorrection = container.parentElement?.classList?.contains('accepted-correction') ||
+                                        container.classList?.contains('accepted-correction');
+            
+            if (isAcceptedCorrection) {
+                acceptButton.setAttribute('disabled', '');
+                rejectButton.setAttribute('disabled', '');
+                return;
+            }
+
+            selectedText = selection.toString().trim();
+            if (selectedText) {
+                acceptButton.removeAttribute('disabled');
+                rejectButton.removeAttribute('disabled');
+            } else {
+                acceptButton.setAttribute('disabled', '');
+                rejectButton.setAttribute('disabled', '');
+            }
+        });
     })
     .catch(error => {
         console.error('Error:', error);
-        resultsPanel.innerHTML = '<div class="error-message">Error processing request</div>';
+        resultsPanel.innerHTML = '<div class="error-message">Error processing request. Please try again.</div>';
     });
 }
 
-// Replace the existing word counter event listener
+// Update the word counter event listener
 document.getElementById('text-input').addEventListener('input', function(e) {
     const maxWords = this.dataset.maxWords || Infinity;
     const words = this.value.trim().split(/\s+/);
     const wordCounter = document.querySelector('.word-counter');
+    const warningElement = document.getElementById('word-limit-warning');
     
     // Handle empty input
+
     if (this.value.trim() === '') {
-        wordCounter.textContent = `0/${maxWords !== Infinity ? maxWords : '∞'}`;
+        if (wordCounter) {
+            wordCounter.textContent = `0/${maxWords !== Infinity ? maxWords : '∞'}`;
+        }
         return;
     }
 
-    // Show warning if approaching limit
     if (words.length > maxWords && maxWords !== Infinity) {
-        wordCounter.classList.add('limit-reached');
-        document.getElementById('word-limit-warning').style.display = 'block';
+        if (wordCounter) {
+            wordCounter.classList.add('limit-reached');
+        }
+        if (warningElement) {
+            warningElement.style.display = 'block';
+        }
     } else {
-        wordCounter.classList.remove('limit-reached');
-        document.getElementById('word-limit-warning').style.display = 'none';
+        if (wordCounter) {
+            wordCounter.classList.remove('limit-reached');
+        }
+        if (warningElement) {
+            warningElement.style.display = 'none';
+        }
     }
 
     // Update counter display
-    wordCounter.textContent = `${words.length}/${maxWords !== Infinity ? maxWords : '∞'}`;
+    if (wordCounter) {
+        wordCounter.textContent = `${words.length}/${maxWords !== Infinity ? maxWords : '∞'}`;
+    }
 });
 
 function showCooldownTimer(minutes, seconds) {
