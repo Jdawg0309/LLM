@@ -289,6 +289,61 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     uploadedFile = e.target.files[0] || null;
     document.getElementById('file-name').textContent = uploadedFile ? uploadedFile.name : '';
 });
+
+document.getElementById('submit-self-correct').addEventListener('click', function (e) {
+    e.preventDefault();
+
+    const original = document.getElementById('text-input').value.trim();
+    const corrected = document.getElementById('self-correct-input').value.trim();
+    const resultsPanel = document.getElementById('correction-results');
+
+    if (!corrected) {
+        alert("Please enter your corrected version.");
+        return;
+    }
+
+    fetch('/editor/self-correct', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            original: original,
+            corrected: corrected
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
+            return;
+        }
+
+        let resultHTML = `
+            <div class="correction-item">
+                <div class="original-text">
+                    <strong>Original:</strong> ${data.original}
+                </div>
+                <div class="corrected-text">
+                    <strong>Corrected:</strong> ${data.corrected}
+                </div>
+                <div class="token-summary">
+                    <strong>Tokens Deducted:</strong> ${data.token_cost}
+                </div>
+            </div>`;
+
+        resultsPanel.innerHTML = resultHTML;
+
+        // Clear and hide the self-correction box
+        document.getElementById('self-correct-input').value = '';
+        document.getElementById('self-correct-box').style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultsPanel.innerHTML = '<div class="error-message">Error processing request</div>';
+    });
+});
+
 document.querySelector('label[for="file-input"]').addEventListener('click', function() {
     document.getElementById('file-input').click();
 });
@@ -327,6 +382,7 @@ document.querySelector('label[for="file-input"]').addEventListener('click', func
     } else {
         sendCorrection(input.value.trim(), correctionType);
     }
+    
 document.getElementById('submit-self-correct').addEventListener('click', function(e) {
     e.preventDefault();
 
@@ -349,7 +405,6 @@ document.getElementById('submit-self-correct').addEventListener('click', functio
         body: JSON.stringify({
             original: original,
             corrected: corrected,
-            correction_type: 'self'
         })
     })
     .then(response => response.json())
