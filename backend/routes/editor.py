@@ -49,11 +49,19 @@ def llm_correct():
             }), 429
 
         try:
+            # Create a mapping of original words to their positions
+            original_words = text.split()
+            word_mapping = {word: i for i, word in enumerate(original_words)}
+
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{
                     "role": "system",
-                    "content": "Highlight changes with <mark class='correction'> tags"
+                    "content": """You are a text correction assistant. When you see text that needs correction:
+                    1. Wrap EACH correction in <mark class='correction' data-original-word='[original word]'> tags
+                    2. Make sure to mark ALL corrections individually
+                    3. Include the original word as data-original-word attribute
+                    4. Return the full text with all corrections marked"""
                 }, {
                     "role": "user",
                     "content": text
@@ -61,7 +69,11 @@ def llm_correct():
             )
             corrected = response.choices[0].message.content
             save_correction(text, corrected, 'llm')
-            return jsonify({'original': text, 'corrected': corrected})
+            return jsonify({
+                'original': text,
+                'corrected': corrected,
+                'word_mapping': word_mapping
+            })
             
         except Exception as e:
             current_app.logger.error(f"OpenAI Error: {str(e)}")
@@ -80,11 +92,19 @@ def llm_correct():
             }), 402
         
         try:
+            # Create a mapping of original words to their positions
+            original_words = text.split()
+            word_mapping = {word: i for i, word in enumerate(original_words)}
+
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{
                     "role": "system",
-                    "content": "Highlight changes with <mark class='correction'> tags"
+                    "content": """You are a text correction assistant. When you see text that needs correction:
+                    1. Wrap EACH correction in <mark class='correction' data-original-word='[original word]'> tags
+                    2. Make sure to mark ALL corrections individually
+                    3. Include the original word as data-original-word attribute
+                    4. Return the full text with all corrections marked"""
                 }, {
                     "role": "user",
                     "content": text
@@ -101,7 +121,8 @@ def llm_correct():
                 'original': text,
                 'corrected': corrected,
                 'tokens_used': required_tokens,
-                'balance': current_user.balance
+                'balance': current_user.balance,
+                'word_mapping': word_mapping
             })
             
         except Exception as e:
@@ -112,24 +133,29 @@ def llm_correct():
 @login_required
 def handle_decision():
     data = request.get_json()
-    correction = CorrectionHistory.query.get(data['correction_id'])
+    original_text = data.get('original_text')
+    selected_text = data.get('selected_text')
+    decision = data.get('decision')
 
-    if data['decision'] == 'accept':
-        correction.status = 'accepted'
+    correction = CorrectionHistory.query.filter_by(
+        user_id=current_user.id,
+        original_text=original_text
+    ).order_by(CorrectionHistory.timestamp.desc()).first()
+
+    if not correction:
+        return jsonify({'error': 'Correction not found'}), 404
+
+    if decision == 'accept':
+        correction.status = 'pending'  # Keep as pending until all corrections are handled
         current_user.balance -= 1
-        correction.final_text = correction.corrected_text
-    else:
-        correction.status = 'rejected'
-        reason = data.get('reason','').strip()
-        penalty = 5 if not reason else 1
-        current_user.balance -= penalty
-        correction.final_text = correction.original_text
-
+        # Don't update final_text yet, just track the acceptance
+        
     db.session.commit()
     current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
+    
     return jsonify({
         'new_balance': current_user.balance,
-        'final_text': correction.final_text
+        'corrected_text': correction.corrected_text  # Return the full corrected text
     })
 
 def save_correction(original, corrected, correction_type, tokens=0):

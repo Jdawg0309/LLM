@@ -1655,3 +1655,159 @@ button:hover {
         width: 100%;
     }
 }
+
+/* Selection styles */
+.selection-hint {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: center;
+    font-style: italic;
+}
+
+.correction-actions button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.corrected-text mark {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0 2px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.corrected-text mark:hover {
+    background: #bbdefb;
+}
+
+.corrected-text mark.selected {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+/* Add these new styles */
+.status-message {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.bot-message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.bot-message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+/* Accepted correction styles */
+.accepted-correction {
+    color: #28a745;
+    background: none;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
+}
+
+/* Active correction styles */
+.corrected-text mark.correction {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0 2px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.corrected-text mark.correction:hover {
+    background: #bbdefb;
+}
+
+.corrected-text mark.correction.selected {
+    background: #bbdefb;
+    outline: 2px solid #1565c0;
+}
+
+/* Success message styles */
+.bot-message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+/* Accepted correction styles */
+.accepted-correction {
+    color: #28a745 !important;
+    background: none !important;
+    cursor: default !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Remove hover effects on accepted corrections */
+.accepted-correction:hover {
+    background: none !important;
+    color: #28a745 !important;
+}
+
+/* Accepted correction styles */
+.corrected-text .accepted {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+    cursor: default;
+}
+
+/* Accepted text styles */
+.accepted-text {
+    color: inherit;
+    background: none;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Rejection message style */
+.bot-message.error {
+    background: #ffeaea;
+    color: #dc3545;
+    border: 1px solid #f5c6cb;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+/* Rejected correction style */
+.rejected-correction {
+    color: inherit;
+    background: none;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
+}
