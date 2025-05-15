@@ -138,3 +138,37 @@ def reject_word(word_id):
 
     flash(f'The word "{word_entry.word}" has been rejected.', 'success')
     return redirect(url_for('main.admin'))
+
+@main_bp.route('/accept_word/<int:word_id>', methods=['POST'])
+@login_required
+def accept_word(word_id):
+    if current_user.user_type != 'super':
+        flash('You do not have permission to perform this action.', 'error')
+        return redirect(url_for('main.admin'))
+
+    # Find the word in the database
+    word_entry = Blacklist.query.get(word_id)
+    if not word_entry:
+        flash('Word not found.', 'error')
+        return redirect(url_for('main.admin'))
+
+    # Update the status to "accepted"
+    word_entry.status = 'approved'
+    db.session.commit()
+
+    flash(f'The word "{word_entry.word}" has been accepted.', 'success')
+    return redirect(url_for('main.admin'))
+
+@main_bp.route('/process_input', methods=['POST'])
+@login_required
+def process_user_input():
+    input_text = request.form.get('input_text')  # Get user input from the form
+    if not input_text:
+        flash('Please enter some text.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Process the input to replace blacklisted words and charge tokens
+    processed_text, tokens_charged = process_input(current_user.id, input_text)
+
+    flash(f'Your input has been processed. {tokens_charged} tokens were charged.', 'success')
+    return render_template('result.html', processed_text=processed_text)

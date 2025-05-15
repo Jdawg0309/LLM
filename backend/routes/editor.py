@@ -25,6 +25,9 @@ def check_cooldown():
 def llm_correct():
     text = request.get_json().get('text', '')
     words = text.split()
+
+    # Process the input to replace blacklisted words and charge tokens
+    processed_text, tokens_charged = process_input(current_user.id, text)
     
     if current_user.user_type == 'free':
         if len(words) > 20:
@@ -55,7 +58,7 @@ def llm_correct():
                     "content": "Highlight changes with <mark class='correction'> tags"
                 }, {
                     "role": "user",
-                    "content": text
+                    "content": processed_text
                 }]
             )
             corrected = response.choices[0].message.content
@@ -85,7 +88,7 @@ def llm_correct():
                     "content": "Highlight changes with <mark class='correction'> tags"
                 }, {
                     "role": "user",
-                    "content": text
+                    "content": processed_text
                 }]
             )
             corrected = response.choices[0].message.content
@@ -138,3 +141,24 @@ def save_correction(original, corrected, correction_type, tokens=0):
     db.session.add(correction)
     db.session.commit()
     return correction
+
+def process_input(user_id, input_text):
+    # Fetch all accepted blacklisted words for the user
+    blacklisted_words = Blacklist.query.filter_by(status='approved').all()
+
+    tokens_charged = 0
+    for word_entry in blacklisted_words:
+        word = word_entry.word
+        if word in input_text:
+            # Replace the word with '*' of the same length
+            input_text = input_text.replace(word, '*' * len(word))
+            # Charge tokens based on the length of the word
+            tokens_charged += len(word)
+
+    # Deduct tokens from the user's balance
+    user = User.query.get(user_id)
+    if user:
+        user.balance -= tokens_charged
+        db.session.commit()
+
+    return input_text, tokens_charged

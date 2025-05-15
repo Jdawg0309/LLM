@@ -1735,3 +1735,25 @@ button:hover {
     background-color: #f44336;
     color: white;
 }
+
+/* Style for approved status */
+.blacklist-status.approved {
+    background-color: #4caf50; /* Green background */
+    color: white; /* White text */
+    padding: 2px 6px; /* Add padding for better appearance */
+    border-radius: 4px; /* Rounded corners */
+    font-size: 0.9rem; /* Match the font size of rejected */
+    text-transform: capitalize; /* Capitalize the first letter */
+}
+
+.blacklist-table .status.pending {
+    color: #ff9800; /* Orange for pending */
+}
+
+.blacklist-table .status.approved {
+    color: #4caf50; /* Green for approved */
+}
+
+.blacklist-table .status.rejected {
+    color: #f44336; /* Red for rejected */
+}
