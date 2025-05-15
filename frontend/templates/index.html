@@ -65,12 +65,7 @@
                         <span id="file-name" style="font-size:0.85rem; color:#888;"></span>
                         
                     </div>
-                    <textarea id="text-input" 
-                              {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
-                              placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
                     
-                    <div class="action-bar">
-                        <!-- AI Correction Button -->
                     <!-- Original Input -->
                     <div class="form-block">
                         <label for="text-input"><strong>Original Text:</strong></label>
