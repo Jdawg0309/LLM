@@ -38,12 +38,14 @@
     color: #fff !important;
 }
 
+/* Update the auth container styles */
 .auth-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #e83e8c, #6610f2);
+    min-height: calc(100vh - 140px); /* Subtract header/footer height */
+    padding: 2rem;
+    /* Remove the background here since it's in the body tag */
 }
 
 .auth-box {
@@ -53,6 +55,7 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 .auth-box h2 {

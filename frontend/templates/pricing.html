@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing - LLMScribe{% endblock %}
+
+{% block content %}
+  <div class="container pricing-container">
+    <div class="pricing-header">
+      <h1>Pricing Plans</h1>
+      <p>Choose the plan that fits your needs.</p>
+    </div>
+
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <h2>Free Plan</h2>
+        <p class="price">$0 / month</p>
+        <ul>
+          <li>Limited tokens</li>
+          <li>Ability to request words for Blacklist</li>
+        </ul>
+        <a href="#" class="btn">Get Started</a>
+      </div>
+
+      <div class="pricing-card">
+        <h2>Pro Plan</h2>
+        <p class="price">$19 / month</p>
+        <ul>
+          <li>Ability to purchase more tokens</li>
+        </ul>
+        <a href="#" class="btn">Get Started</a>
+      </div>
+
+      <div class="pricing-card">
+        <h2>Super Plan</h2>
+        <p class="price">$49 / month</p>
+        <ul>
+          <li>Handle complaints</li>
+          <li>Accept/deny user applications</li>
+          <li>Suspend/fine/terminate paid users</li>
+        </ul>
+        <a href="#" class="btn">Get Started</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

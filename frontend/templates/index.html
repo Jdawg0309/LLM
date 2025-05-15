@@ -5,44 +5,53 @@
 {% block content %}
 <div class="container">
     <div class="editor-container">
+        <div class="chatbot-header">
+            <h2>
+                <i class="fas fa-robot"></i>
+                LLMScribe Assistant
+                <i class="fas fa-chevron-down"></i>
+            </h2>
+        </div>
+
         {% if current_user.is_authenticated %}
-            <div class="dashboard-header">
-                <h1>Welcome, {{ current_user.username }}!</h1>
+            <div class="dashboard-stats">
                 {% if current_user.user_type == 'paid' %}
-                <div class="dashboard-panel">
                     <div class="token-balance">
                         <i class="fas fa-coins"></i>
                         <span>{{ current_user.balance }} tokens</span>
                     </div>
-                    <div class="usage-stats">
-                        <div>Corrections Made: {{ correction_count }}</div>
-                        <div>Words Processed: {{ word_count }}</div>
-                    </div>
-                </div>
                 {% endif %}
-            </div>
-        {% else %}
-            <div class="welcome-message">
-                <div class="bot-message">Welcome to LLMScribe. Please log in to get started.</div>
             </div>
         {% endif %}
 
-        <div class="editor-area">
-            <textarea id="text-input" 
-                      {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
-                      placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"
-                      rows="6"></textarea>
+        <div class="chat-area">
+            <div class="messages-container" id="correction-results">
+                {% if current_user.is_authenticated %}
+                    <div class="bot-message">
+                        Hello {{ current_user.username }}! Please enter your text for correction.
+                    </div>
+                {% else %}
+                    <div class="bot-message">
+                        Welcome to LLMScribe. Please log in to get started.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="input-area">
+                <textarea id="text-input" 
+                          {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
+                          placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                
+                <div class="action-bar">
+                    <button id="llm-correct" class="send-button" title="AI Correct">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
             
-            <div class="action-bar">
-                <button id="llm-correct" class="btn-primary">
-                    <i class="fas fa-robot"></i> AI Correct
-                </button>
+            <div class="word-counter-container">
                 <span class="word-counter">0/{% if current_user.user_type == 'free' %}20{% else %}∞{% endif %}</span>
             </div>
-        </div>
-
-        <div class="correction-panel" id="correction-results">
-            <!-- Correction results will appear here -->
         </div>
     </div>
 </div>
@@ -53,12 +62,15 @@ document.getElementById('llm-correct').addEventListener('click', function(e) {
     processText('llm');
 });
 
-document.getElementById('self-correct').addEventListener('click', function(e) {
-    e.preventDefault();
-    processText('self');
-});
-
 function processText(correctionType) {
+    // Add authentication check
+    {% if not current_user.is_authenticated %}
+        document.getElementById('correction-results').innerHTML = 
+            '<div class="bot-message error">You must be logged in to use this feature. ' +
+            '<a href="{{ url_for("auth.login") }}" class="login-link">Login here</a></div>';
+        return;
+    {% endif %}
+
     const input = document.getElementById('text-input');
     const resultsPanel = document.getElementById('correction-results');
     const text = input.value.trim();
@@ -81,7 +93,7 @@ function processText(correctionType) {
     // Show loading state
     resultsPanel.innerHTML = '<div class="bot-message">Processing your text...</div>';
     
-    fetch(`/${correctionType}-correct`, {
+    fetch(`/editor/${correctionType}-correct`, {  // Changed from /${correctionType}-correct
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -150,230 +162,4 @@ document.getElementById('text-input').addEventListener('input', function(e) {
     wordCounter.textContent = `${words.length}/${maxWords !== Infinity ? maxWords : '∞'}`;
 });
 </script>
-
-<style>
-/* Added word limit styling */
-.word-counter.limit-reached {
-    color: #dc3545;
-    font-weight: bold;
-    animation: pulseWarning 1s infinite;
-}
-
-@keyframes pulseWarning {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* Enhanced textarea styling */
-#text-input:disabled {
-    background-color: #f8f9fa;
-    cursor: not-allowed;
-}
-
-/* Better responsive handling */
-@media (max-width: 768px) {
-    .action-bar {
-        flex-direction: column;
-    }
-    
-    .word-counter {
-        margin-left: 0;
-        order: -1;
-    }
-}
-
-/* Keep existing styles from previous version */
-.editor-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 2rem;
-}
-
-.dashboard-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
-}
-    *,
-*:before,
-*:after {
-  box-sizing: border-box;
-}
-
-/* Ensure the editor area never overflows */
-.editor-area {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;      /* just in case */
-  padding: 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fafafa;   /* light background to set it apart */
-}
-
-/* Style and constrain the textarea itself */
-#text-input {
-  width: 100%;
-  max-width: 100%;
-  min-height: 200px;
-  padding: 1rem;
-  border: 1px solid #ccc;         /* subtle inset */
-  border-radius: 4px;
-  background: #fff;
-  resize: vertical;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-/* Tweak the action bar so it always fits */
-.action-bar {
-  display: flex;
-  flex-wrap: wrap;      /* wrap on narrow screens */
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* Button tweaks for better touch targets */
-.action-bar button {
-  flex: 1 0 auto;       /* allow buttons to shrink if needed */
-  max-width: 200px;
-}
-.editor-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 2rem;
-}
-
-.dashboard-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
-}
-
-.dashboard-panel {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    margin: 1rem 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.token-balance {
-    background: #ffd700;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: bold;
-}
-
-.editor-area {
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1rem;
-    margin: 1rem 0;
-}
-
-#text-input {
-    width: 100%;
-    min-height: 200px;
-    padding: 1rem;
-    border: none;
-    resize: vertical;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 1rem;
-    line-height: 1.6;
-}
-
-.action-bar {
-    margin-top: 1rem;
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.btn-primary {
-    background: #3498db;
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.word-counter {
-    margin-left: auto;
-    color: #6c757d;
-}
-
-.correction-panel {
-    margin-top: 2rem;
-    border-top: 2px solid #eee;
-    padding-top: 1rem;
-}
-
-.correction-item {
-    margin: 1rem 0;
-    padding: 1rem;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    background: #f8f9fa;
-}
-
-.original-text {
-    color: #6c757d;
-    margin-bottom: 0.5rem;
-}
-
-.corrected-text {
-    color: #28a745;
-    margin: 1rem 0;
-}
-
-.correction-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.highlight {
-    background-color: #fff3cd;
-    padding: 2px 4px;
-    border-radius: 3px;
-}
-
-.error-message {
-    background: #ffebee;
-    color: #dc3545;
-    padding: 1rem;
-    border-radius: 4px;
-    margin: 1rem 0;
-}
-
-.bot-message {
-    background: #e2f0ff;
-    color: #004085;
-    padding: 1rem;
-    border-radius: 4px;
-    margin: 1rem 0;
-}
-
-</style>
 {% endblock %}

@@ -8,7 +8,9 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__,
+                template_folder='../frontend/templates',
+                static_folder='../frontend/static')
 
     # Load environment variables
     load_dotenv()
@@ -38,16 +40,16 @@ def create_app():
     login_manager.init_app(app)
 
     # User Loader function
-    from frontend.models import User
+    from backend.models import User  # Updated import path
 
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    login_manager.login_view = 'main.login'
+    login_manager.login_view = 'auth.login'  # Update this to use auth blueprint
 
-    # Register routes
-    from frontend.routes import bp
-    app.register_blueprint(bp)
+    # Register routes using the new blueprint structure
+    from backend.routes import init_routes
+    init_routes(app)
 
     return app
