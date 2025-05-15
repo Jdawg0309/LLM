@@ -414,7 +414,9 @@ function processText(correctionType) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || 'An error occurred');
+            });
         }
         return response.json();
     })
@@ -430,7 +432,13 @@ function processText(correctionType) {
                 }, 5000);
                 return;
             }
-            resultsPanel.innerHTML = `<div class="error-message">${data.error}</div>`;
+            // Display error in results panel with styling
+            resultsPanel.innerHTML = `
+                <div class="bot-message error" style="background: #ffeaea; color: #dc3545; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #f5c6cb;">
+                    <i class="fas fa-exclamation-circle"></i> ${data.error}
+                    ${data.penalty ? `<br><br>Penalty: ${data.penalty} tokens deducted.` : ''}
+                    ${data.balance !== undefined ? `<br>Current balance: ${data.balance} tokens.` : ''}
+                </div>`;
             return;
         }
 
@@ -652,7 +660,10 @@ function processText(correctionType) {
     })
     .catch(error => {
         console.error('Error:', error);
-        resultsPanel.innerHTML = '<div class="error-message">Error processing request. Please try again.</div>';
+        resultsPanel.innerHTML = `
+            <div class="bot-message error" style="background: #ffeaea; color: #dc3545; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #f5c6cb;">
+                <i class="fas fa-exclamation-circle"></i> ${error.message || 'Error processing request. Please try again.'}
+            </div>`;
     });
 }
 

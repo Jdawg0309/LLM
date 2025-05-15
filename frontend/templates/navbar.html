@@ -3,7 +3,9 @@
     <ul class="navbar-links">
         <li><a href="{{ url_for('main.home') }}">Home</a></li>
         <li><a href="{{ url_for('main.feature') }}">Features</a></li>
-        <li><a href="{{ url_for('main.admin') }}">Admin</a></li>
+        {% if current_user.is_authenticated and current_user.user_type == 'super' %}
+            <li><a href="{{ url_for('main.admin') }}">Admin</a></li>
+        {% endif %}
         <li><a href="{{ url_for('main.pricing') }}">Pricing</a></li>
         {% if current_user.is_authenticated %}
             <li>

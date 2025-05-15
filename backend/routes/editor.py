@@ -27,9 +27,6 @@ def llm_correct():
     text = request.get_json().get('text', '')
     words = text.split()
 
-    # Process the input to replace blacklisted words and charge tokens
-    processed_text, tokens_charged = process_input(current_user.id, text)
-    
     if current_user.user_type == 'free':
         if len(words) > 20:
             # Set last submission time
@@ -52,10 +49,10 @@ def llm_correct():
             }), 429
 
         try:
-            # Create a mapping of original words to their positions
-            original_words = text.split()
-            word_mapping = {word: i for i, word in enumerate(original_words)}
-
+            # Process blacklisted words first
+            processed_text, tokens_charged = process_input(current_user.id, text)
+            
+            # Then send processed text to OpenAI
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{
@@ -65,7 +62,7 @@ def llm_correct():
                     2. The data-original attribute MUST contain the original word being corrected
                     3. Mark each correction individually
                     4. Keep all other words unchanged
-                    5. Maintain the exact order of words"""
+                    5. Maintain exact positions of asterisks (*) in the text"""
                 }, {
                     "role": "user",
                     "content": processed_text
@@ -73,10 +70,11 @@ def llm_correct():
             )
             corrected = response.choices[0].message.content
             save_correction(text, corrected, 'llm')
+            
             return jsonify({
                 'original': text,
                 'corrected': corrected,
-                'word_mapping': word_mapping
+                'word_mapping': {word: i for i, word in enumerate(text.split())}
             })
             
         except Exception as e:
@@ -91,15 +89,33 @@ def llm_correct():
             db.session.commit()
             current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
             return jsonify({
-                'error': f'Insufficient tokens. {penalty} tokens deducted',
-                'balance': current_user.balance
+                'error': f'Insufficient tokens. You need {required_tokens} tokens but only have {current_user.balance + penalty}. As a penalty, {penalty} tokens have been deducted from your balance.',
+                'balance': current_user.balance,
+                'penalty': penalty,
+                'required': required_tokens
             }), 402
         
         try:
-            # Create a mapping of original words to their positions
-            original_words = text.split()
-            word_mapping = {word: i for i, word in enumerate(original_words)}
+            # Process blacklisted words first
+            processed_text, tokens_charged = process_input(current_user.id, text)
+            
+            # Update required tokens to include blacklist charges
+            required_tokens += tokens_charged
+            
+            if current_user.balance < required_tokens:
+                # Handle insufficient tokens after blacklist processing
+                penalty = max(0, current_user.balance // 2)
+                current_user.balance -= penalty
+                db.session.commit()
+                current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
+                return jsonify({
+                    'error': f'Insufficient tokens. You need {required_tokens} tokens but only have {current_user.balance + penalty}. As a penalty, {penalty} tokens have been deducted from your balance.',
+                    'balance': current_user.balance,
+                    'penalty': penalty,
+                    'required': required_tokens
+                }), 402
 
+            # Then send processed text to OpenAI
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{
@@ -109,26 +125,49 @@ def llm_correct():
                     2. The data-original attribute MUST contain the original word being corrected
                     3. Mark each correction individually
                     4. Keep all other words unchanged
-                    5. Maintain the exact order of words"""
+                    5. Maintain exact positions of asterisks (*) in the text"""
                 }, {
                     "role": "user",
                     "content": processed_text
                 }]
             )
             corrected = response.choices[0].message.content
+            
+            # Check if text is more than 10 words and has no corrections
+            no_corrections = "<mark class='correction'" not in corrected
+            if len(words) > 10 and no_corrections:
+                # Add 3 token bonus
+                current_user.balance += 3
+                # Record the bonus transaction
+                bonus_transaction = TokenTransaction(
+                    user_id=current_user.id,
+                    amount=3,
+                    transaction_type='bonus'
+                )
+                db.session.add(bonus_transaction)
+                
+            # Deduct required tokens
             current_user.balance -= required_tokens
 
             save_correction(text, corrected, 'llm', required_tokens)
             db.session.commit()
             
             current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
-            return jsonify({
+            
+            response_data = {
                 'original': text,
                 'corrected': corrected,
                 'tokens_used': required_tokens,
                 'balance': current_user.balance,
-                'word_mapping': word_mapping
-            })
+                'word_mapping': {word: i for i, word in enumerate(text.split())}
+            }
+            
+            # Add bonus notification if applicable
+            if len(words) > 10 and no_corrections:
+                response_data['bonus'] = 3
+                response_data['bonus_message'] = 'Perfect text! You received a 3 token bonus.'
+            
+            return jsonify(response_data)
             
         except Exception as e:
             current_app.logger.error(f"OpenAI Error: {str(e)}")
@@ -225,23 +264,23 @@ def self_correct():
         "corrected": highlighted_text,
         "token_cost": token_cost
     })
+
 def process_input(user_id, input_text):
     # Fetch all accepted blacklisted words for the user
     blacklisted_words = Blacklist.query.filter_by(status='approved').all()
 
     tokens_charged = 0
+    processed_text = input_text
+    
     for word_entry in blacklisted_words:
         word = word_entry.word
-        if word in input_text:
+        # Count occurrences of the word
+        count = processed_text.count(word)
+        if count > 0:
             # Replace the word with '*' of the same length
-            input_text = input_text.replace(word, '*' * len(word))
+            processed_text = processed_text.replace(word, '*' * len(word))
             # Charge tokens based on the length of the word
             tokens_charged += len(word)
 
-    # Deduct tokens from the user's balance
-    user = User.query.get(user_id)
-    if user:
-        user.balance -= tokens_charged
-        db.session.commit()
-
-    return input_text, tokens_charged
+    # Remove token deduction from here, just return the values
+    return processed_text, tokens_charged
