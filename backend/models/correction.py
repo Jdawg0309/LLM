@@ -16,4 +16,4 @@ class CorrectionHistory(db.Model):
 
     __table_args__ = (
         db.Index('idx_status', 'status'),  # Added for better query performance
-    )
+)

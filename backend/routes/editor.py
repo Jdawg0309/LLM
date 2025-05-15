@@ -340,3 +340,12 @@ def process_input(user_id, input_text):
 
     # Remove token deduction from here, just return the values
     return processed_text, tokens_charged
+
+@editor_bp.route('/editor')
+@login_required
+def editor_view():
+    # Fetch the last 20 correction records for this user
+    correction_history = CorrectionHistory.query.filter_by(user_id=current_user.id).order_by(CorrectionHistory.timestamp.desc()).limit(20).all()
+    
+    return render_template('editor.html', correction_history=correction_history)
+
