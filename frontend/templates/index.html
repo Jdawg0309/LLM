@@ -23,7 +23,7 @@
                     <div class="stat-item">
                         <i class="fas fa-coins"></i>
                         <div class="stat-details">
-                            <span class="stat-value">{{ current_user.balance }}</span>
+                            <span class="stat-value" id="token-balance">{{ current_user.balance }}</span>
                             <span class="stat-label">Tokens Available</span>
                         </div>
                     </div>
@@ -166,7 +166,7 @@
     }
 
     .corrected-text mark.correction {
-        background-color: #e0ffe0;
+        background-color: #ffc107;
         padding: 2px 4px;
         border-radius: 3px;
     }
@@ -696,4 +696,21 @@ function showCooldownTimer(minutes, seconds) {
     document.body.appendChild(modal);
 }
 </script>
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+const socket = io();
+
+socket.on('connect', () => {
+    console.log('✅ WebSocket connected');
+});
+
+// Handle token updates
+socket.on('update_tokens', function(data) {
+    const el = document.getElementById('token-balance');
+    if (el && data.balance !== undefined) {
+        el.textContent = data.balance;
+    }
+});
+</script>
+
 {% endblock %}

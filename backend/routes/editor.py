@@ -85,6 +85,7 @@ def llm_correct():
             penalty = max(0, current_user.balance // 2)
             current_user.balance -= penalty
             db.session.commit()
+            current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
             return jsonify({
                 'error': f'Insufficient tokens. {penalty} tokens deducted',
                 'balance': current_user.balance
@@ -111,8 +112,11 @@ def llm_correct():
             )
             corrected = response.choices[0].message.content
             current_user.balance -= required_tokens
+
             save_correction(text, corrected, 'llm', required_tokens)
             db.session.commit()
+            
+            current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
             return jsonify({
                 'original': text,
                 'corrected': corrected,
@@ -147,6 +151,7 @@ def handle_decision():
         # Don't update final_text yet, just track the acceptance
         
     db.session.commit()
+    current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
     
     return jsonify({
         'new_balance': current_user.balance,
@@ -208,6 +213,7 @@ def self_correct():
     current_user.balance -= token_cost
     save_correction(original, corrected, 'self', token_cost)
     db.session.commit()
+    current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
 
     return jsonify({
         "original": original,
