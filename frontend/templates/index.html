@@ -468,12 +468,26 @@ function processText(correctionType) {
                 <div class="correction-actions">
                     <button class="btn-accept" disabled>Accept</button>
                     <button class="btn-reject" disabled>Reject</button>
+                    <button class="btn-reject-all">Reject All</button>
                 </div>
                 <div class="selection-hint">
                     Select the corrections you want to accept or reject
                 </div>
                 <div class="status-message"></div>
-            `; // Added missing backtick here
+                <!-- Add modal for rejection reason -->
+                <div id="rejection-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <h3>Rejection Reason</h3>
+                        <textarea id="rejection-reason" 
+                            placeholder="Please explain why you are rejecting these corrections..."
+                            rows="4"></textarea>
+                        <div class="modal-buttons">
+                            <button id="submit-rejection">Submit</button>
+                            <button id="cancel-rejection">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         } else if (correctionType === 'self') {
             resultHTML += `
                 <div class="token-summary">
@@ -629,6 +643,82 @@ function processText(correctionType) {
                     console.error('Error:', error);
                     statusMessage.innerHTML = '<div class="error-message">Error processing request</div>';
                 });
+            });
+        }
+
+        // Add the reject all handler after setting up other buttons:
+        const rejectAllButton = resultsPanel.querySelector('.btn-reject-all');
+        const rejectionModal = resultsPanel.querySelector('#rejection-modal');
+
+        if (rejectAllButton) {
+            rejectAllButton.addEventListener('click', function() {
+                // Show the rejection reason modal
+                rejectionModal.style.display = 'block';
+
+                // Handle modal submission
+                document.getElementById('submit-rejection').onclick = function() {
+                    const reason = document.getElementById('rejection-reason').value.trim();
+                    if (!reason) {
+                        alert('Please provide a reason for rejection');
+                        return;
+                    }
+
+                    fetch('/editor/handle-rejection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            original_text: data.original,
+                            corrected_text: data.corrected,
+                            rejection_reason: reason
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(responseData => {
+                        if (responseData.error) {
+                            statusMessage.innerHTML = `<div class="error-message">${responseData.error}</div>`;
+                        } else {
+                            // Get all mark elements
+                            const marks = correctedContent.getElementsByTagName('mark');
+                            
+                            // Convert to array since we'll be modifying the DOM
+                            const marksArray = Array.from(marks);
+                            
+                            // Replace each marked correction with its original word
+                            marksArray.forEach(mark => {
+                                const originalWord = mark.getAttribute('data-original');
+                                const textNode = document.createTextNode(originalWord || mark.textContent);
+                                mark.parentNode.replaceChild(textNode, mark);
+                            });
+                            
+                            // Show rejection message
+                            statusMessage.innerHTML = `
+                                <div class="bot-message error">
+                                    All corrections rejected! Your reason has been submitted for review.
+                                    Current balance: ${responseData.new_balance} tokens
+                                </div>`;
+
+                            // Remove correction actions
+                            const actionsDiv = resultsPanel.querySelector('.correction-actions');
+                            const selectionHint = resultsPanel.querySelector('.selection-hint');
+                            if (actionsDiv) actionsDiv.remove();
+                            if (selectionHint) selectionHint.remove();
+
+                            // Hide modal
+                            rejectionModal.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        statusMessage.innerHTML = '<div class="error-message">Error processing request</div>';
+                    });
+                };
+
+                // Handle modal cancellation
+                document.getElementById('cancel-rejection').onclick = function() {
+                    rejectionModal.style.display = 'none';
+                };
             });
         }
 

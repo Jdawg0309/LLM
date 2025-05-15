@@ -111,17 +111,23 @@ def blacklist_word():
 @main_bp.route('/admin')
 @login_required
 def admin():
-    # Ensure only super users can access this page
     if current_user.user_type != 'super':
         flash('You do not have permission to access this page.', 'error')
         return redirect(url_for('main.home'))
 
-    # Fetch all blacklisted words and their submitters
+    # Fetch blacklisted words
     blacklisted_words = db.session.query(
         Blacklist.id, Blacklist.word, Blacklist.status, User.username, User.email
     ).join(User, Blacklist.submitted_by == User.id).all()
 
-    return render_template('admin.html', blacklisted_words=blacklisted_words)
+    # Fetch corrections with rejections and include user information
+    corrections = CorrectionHistory.query.filter_by(status='rejected').join(
+        User, CorrectionHistory.user_id == User.id
+    ).order_by(CorrectionHistory.timestamp.desc()).all()
+
+    return render_template('admin.html', 
+                         blacklisted_words=blacklisted_words,
+                         corrections=corrections)
 
 @main_bp.route('/reject_word/<int:word_id>', methods=['POST'])
 @login_required
@@ -161,6 +167,38 @@ def accept_word(word_id):
     db.session.commit()
 
     flash(f'The word "{word_entry.word}" has been accepted.', 'success')
+    return redirect(url_for('main.admin'))
+
+@main_bp.route('/review_rejection/<int:rejection_id>/<decision>', methods=['POST'])
+@login_required
+def review_rejection(rejection_id, decision):
+    if current_user.user_type != 'super':
+        flash('You do not have permission to perform this action.', 'error')
+        return redirect(url_for('main.admin'))
+
+    correction = CorrectionHistory.query.get(rejection_id)
+    if not correction:
+        flash('Rejection not found.', 'error')
+        return redirect(url_for('main.admin'))
+
+    user = User.query.get(correction.user_id)
+    if not user:
+        flash('User not found.', 'error')
+        return redirect(url_for('main.admin'))
+
+    if decision == 'accept':
+        # Deduct 1 token for accepted rejection
+        token_deduction = 1
+        correction.status = 'rejection_approved'
+    else:
+        # Deduct 5 tokens for rejected rejection
+        token_deduction = 5
+        correction.status = 'rejection_denied'
+
+    user.balance -= token_deduction
+    db.session.commit()
+
+    flash(f'Rejection {"accepted" if decision == "accept" else "rejected"}. {token_deduction} tokens deducted.', 'success')
     return redirect(url_for('main.admin'))
 
 @main_bp.route('/process_input', methods=['POST'])
