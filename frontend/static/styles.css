@@ -871,19 +871,6 @@ button:hover {
     flex-direction: column;
 }
 
-.send-button {
-    background: #5c4adb;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
 
 .send-button:hover {
     background: #4a3db3;
