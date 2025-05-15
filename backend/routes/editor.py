@@ -265,6 +265,35 @@ def self_correct():
         "token_cost": token_cost
     })
 
+@editor_bp.route('/save-corrected', methods=['POST'])
+@login_required
+def save_corrected():
+    if current_user.user_type != 'paid':
+        return jsonify({'error': 'Only paid users can use the save feature.'}), 403
+
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'No text to save.'}), 400
+
+    if current_user.balance < 5:
+        return jsonify({'error': 'Insufficient tokens to save. You need at least 5 tokens.'}), 402
+
+    current_user.balance -= 5
+    transaction = TokenTransaction(
+        user_id=current_user.id,
+        amount=5,
+        transaction_type='save'
+    )
+    db.session.add(transaction)
+    db.session.commit()
+    try:
+        current_app.socketio.emit('update_tokens', {'balance': current_user.balance})
+    except Exception:
+        pass
+
+    return jsonify({'success': True, 'balance': current_user.balance})
+
 def process_input(user_id, input_text):
     # Fetch all accepted blacklisted words for the user
     blacklisted_words = Blacklist.query.filter_by(status='approved').all()

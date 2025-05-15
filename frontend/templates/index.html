@@ -103,6 +103,12 @@
                             <button id="self-correct" class="action-button self-correct">
                                 <i class="fas fa-user-edit"></i> Self Correct
                             </button>
+                            {% if current_user.user_type == 'paid' %}
+                                <button id="save-corrected-btn" class="send-button" style="background: #0d9488;">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <span id="save-error" style="color: #dc3545; margin-left: 12px; display: none;"></span>
+                                {% endif %}
                         </div>
                     </div>
 
@@ -483,6 +489,64 @@ function processText(correctionType) {
 
         resultHTML += `</div>`;
         resultsPanel.innerHTML = resultHTML;
+
+
+        if ("{{ current_user.user_type }}" === "paid") {
+    setTimeout(() => {
+        const saveBtn = document.getElementById('save-corrected-btn');
+        const saveError = document.getElementById('save-error');
+        if (saveBtn) {
+            saveBtn.onclick = function() {
+                // Get the corrected text (strip HTML tags if needed)
+                const correctedDiv = document.getElementById('corrected-content');
+                let correctedText = correctedDiv ? correctedDiv.textContent.replace(/^Corrected:\s*/, '') : '';
+                if (!correctedText) {
+                    saveError.textContent = "No corrected text to save.";
+                    saveError.style.display = "inline";
+                    return;
+                }
+                // Call backend to deduct tokens
+                fetch('/editor/save-corrected', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: correctedText })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.error) {
+                        saveError.textContent = res.error;
+                        saveError.style.display = "inline";
+                    } else {
+                        saveError.style.display = "none";
+                        // Download file
+                        const blob = new Blob([correctedText], {type: "text/plain"});
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = "corrected_text.txt";
+                        document.body.appendChild(link);
+                        link.click();
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(link.href);
+                        }, 0);
+                        // Update token balance if provided
+                        if (res.balance !== undefined) {
+                            const tokenEl = document.getElementById('token-balance');
+                            if (tokenEl) tokenEl.textContent = res.balance;
+                        }
+                    }
+                })
+                .catch(() => {
+                    saveError.textContent = "Failed to save. Please try again.";
+                    saveError.style.display = "inline";
+                });
+            };
+        }
+    }, 100); // Wait for DOM to update
+}
+
 
         // Add selection functionality for all mark elements
         const correctedContent = document.getElementById('corrected-content');
