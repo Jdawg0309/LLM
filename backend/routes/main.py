@@ -11,9 +11,11 @@ def home():
         correction_count = CorrectionHistory.query.filter_by(user_id=current_user.id).count()
         word_count = db.session.query(db.func.sum(CorrectionHistory.tokens_used))\
             .filter_by(user_id=current_user.id).scalar() or 0
+        user_blacklist = Blacklist.query.filter_by(submitted_by=current_user.id).all()
         return render_template('index.html', 
                              correction_count=correction_count,
-                             word_count=word_count)
+                             word_count=word_count,
+                             user_blacklist=user_blacklist)
     return render_template('index.html')
 
 @main_bp.route('/pricing')
@@ -79,3 +81,25 @@ def paid_300():
         flash('User not found.', 'error')
 
     return redirect(url_for('main.pricing'))
+
+@main_bp.route('/blacklist_word', methods=['POST'])
+@login_required
+def blacklist_word():
+    word = request.form.get('word').strip().lower()  # Get the word from the form
+    if not word:
+        flash('Please enter a valid word.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Check if the word already exists in the blacklist
+    existing_word = Blacklist.query.filter_by(word=word, submitted_by=current_user.id).first()
+    if existing_word:
+        flash('This word is already in your blacklist.', 'info')
+        return redirect(url_for('main.home'))
+
+    # Add the word to the blacklist
+    new_blacklist_entry = Blacklist(word=word, submitted_by=current_user.id, status='pending')
+    db.session.add(new_blacklist_entry)
+    db.session.commit()
+
+    flash('Your suggestion has been submitted for review.', 'success')
+    return redirect(url_for('main.home'))

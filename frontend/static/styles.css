@@ -1564,3 +1564,110 @@ button:hover {
         width: 100%;
     }
 }
+
+/* Center the Blacklist Section */
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    text-align: center; /* Center text inside the container */
+}
+
+.blacklist-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    color: #333;
+    width: 100%; /* Ensure it spans the full width of the container */
+}
+
+.blacklist-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the form elements horizontally */
+    gap: 1rem;
+    width: 100%; /* Ensure the form spans the full width of the container */
+}
+
+.blacklist-form .form-group {
+    width: 100%;
+    max-width: 400px; /* Limit the width of the input box */
+}
+
+#blacklist-word {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+.blacklist-form .btn {
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+}
+
+.blacklist-scroll {
+    margin-top: 1rem;
+    max-height: 200px; /* Limit the height of the scrollable area */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.blacklist-scroll h4 {
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+#blacklist-words {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#blacklist-words li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#blacklist-words li:last-child {
+    border-bottom: none;
+}
+
+.blacklist-word {
+    font-weight: bold;
+    color: #333;
+}
+
+.blacklist-status {
+    font-size: 0.9rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.blacklist-status.pending {
+    background-color: #ffeb3b;
+    color: #333;
+}
+
+.blacklist-status.accepted {
+    background-color: #4caf50;
+    color: white;
+}
+
+.blacklist-status.rejected {
+    background-color: #f44336;
+    color: white;
+}
