@@ -1811,3 +1811,76 @@ button:hover {
     -ms-user-select: none;
     pointer-events: none;
 }
+
+/* Action Bar Styles */
+.action-bar.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.action-button {
+    flex: 1;
+    max-width: 200px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.action-button i {
+    font-size: 1.1rem;
+}
+
+/* AI Correct Button */
+.ai-correct {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.ai-correct:hover {
+    background: linear-gradient(135deg, #43A047, #388E3C);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.2);
+}
+
+/* Self Correct Button */
+.self-correct {
+    background: linear-gradient(135deg, #2196F3, #1e88e5);
+    color: white;
+}
+
+.self-correct:hover {
+    background: linear-gradient(135deg, #1E88E5, #1976D2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(33, 150, 243, 0.2);
+}
+
+/* Active/Click Effect */
+.action-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+    .action-bar.button-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .action-button {
+        width: 100%;
+        max-width: none;
+    }
+}

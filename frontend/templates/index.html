@@ -72,6 +72,16 @@
                         <textarea id="text-input"
                                 {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
                                 placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                        
+                        <!-- Main Action Buttons -->
+                        <div class="action-bar button-row">
+                            <button id="llm-correct" class="action-button ai-correct">
+                                <i class="fas fa-robot"></i> AI Correct
+                            </button>
+                            <button id="self-correct" class="action-button self-correct">
+                                <i class="fas fa-user-edit"></i> Self Correct
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Self-Correct Block -->
@@ -83,16 +93,6 @@
                                 <i class="fas fa-check-circle"></i> Submit Corrections
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Main Action Buttons -->
-                    <div class="action-bar button-row">
-                        <button id="llm-correct" class="send-button" title="AI Correct">
-                            <i class="fas fa-robot"></i> AI Correct
-                        </button>
-                        <button id="self-correct" class="send-button" title="Self Correct">
-                            <i class="fas fa-user-edit"></i> Self Correct
-                        </button>
                     </div>
                 </div>
 
