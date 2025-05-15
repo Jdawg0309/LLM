@@ -5,3 +5,5 @@ flask-login
 python-dotenv 
 pymysql
 openai
+flask-socketio==5.5.1
+eventlet==0.39.1
