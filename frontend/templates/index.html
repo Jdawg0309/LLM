@@ -6,42 +6,60 @@
 <div class="three-column-layout">
     {% if current_user.is_authenticated %}
     <aside class="left-sidebar">
-        <div class="user-profile">
-            <i class="fas fa-user-circle"></i>
-            <div class="info">
-                <h3>{{ current_user.username }}</h3>
-                <p>{{ current_user.email }}</p>
-                <span class="user-badge {{ current_user.user_type }}">{{ current_user.user_type|title }} User</span>
-            </div>
-        </div>
+        <table class="profile-table">
+            <thead>
+                <tr>
+                    <th colspan="2"><i class="fas fa-user-circle"></i> User Profile</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Username</strong></td>
+                    <td>{{ current_user.username }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Email</strong></td>
+                    <td>{{ current_user.email }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Status</strong></td>
+                    <td><span class="user-badge {{ current_user.user_type }}">{{ current_user.user_type|title }} User</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Tokens</strong></td>
+                    <td><span id="token-balance">{{ current_user.balance }}</span></td>
+                </tr>
+            </tbody>
+        </table>
 
-        <div class="token-display">
-            <i class="fas fa-coins"></i>
-            <div>
-                <strong id="token-balance">{{ current_user.balance }}</strong>
-                <span>Tokens Available</span>
-            </div>
-        </div>
+        <div class="blacklist-section">
+            <h4><i class="fas fa-ban"></i> Blacklist a Word</h4>
+            <form action="/blacklist_word" method="POST" class="blacklist-form">
+                <input type="text" id="blacklist-word" name="word" placeholder="Enter a word" required>
+                <button type="submit">Submit</button>
+            </form>
 
-        <form action="/blacklist_word" method="POST" class="blacklist-form">
-            <label for="blacklist-word">Blacklist a word:</label>
-            <input type="text" id="blacklist-word" name="word" required>
-            <button type="submit">Submit</button>
-        </form>
-
-        <div class="blacklist-history">
-            <h4>Blacklisted Words</h4>
-            <ul>
-                {% for word in user_blacklist %}
-                <li>
-                    <span>{{ word.word }}</span>
-                    <span class="status {{ word.status }}">{{ word.status|title }}</span>
-                </li>
-                {% endfor %}
-            </ul>
+            <h4 style="margin-top: 1rem;"><i class="fas fa-list"></i> Blacklisted Words</h4>
+            <table class="blacklist-table">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for word in user_blacklist %}
+                    <tr>
+                        <td>{{ word.word }}</td>
+                        <td class="{{ word.status }}">{{ word.status|title }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </aside>
     {% endif %}
+
 
     <main class="center-editor">
         <h2><i class="fas fa-robot"></i> LLMScribe Assistant</h2>
@@ -57,14 +75,15 @@
         <div class="input-form">
             <textarea id="text-input" {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %} placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
 
-            <label for="file-input"><i class="fas fa-upload"></i> Upload</label>
-            <input type="file" id="file-input" style="display:none;">
-            <span id="file-name"></span>
-
             <div id="self-correct-box" style="display:none;">
                 <textarea id="self-correct-input" placeholder="Self-corrected version..."></textarea>
                 <button id="submit-self-correct"><i class="fas fa-check-circle"></i> Submit Corrections</button>
             </div>
+
+            <label for="file-input"><i class="fas fa-upload"></i> Upload</label>
+            <input type="file" id="file-input" style="display:none;">
+            <span id="file-name"></span>
+
 
             <div class="button-group">
                 <button id="llm-correct"><i class="fas fa-robot"></i> AI Correct</button>
@@ -84,16 +103,30 @@
     <aside class="right-sidebar">
         <h3><i class="fas fa-history"></i> Correction History</h3>
         <div class="history-list">
-            {% for item in correction_history %}
-            <div class="history-item">
-                <p><strong>{{ item.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</strong></p>
-                <p>Original: {{ item.original }}</p>
-                <p>Corrected: {{ item.corrected|safe }}</p>
-                <p>Tokens: {{ item.token_cost }}</p>
-            </div>
+            {% if correction_history %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Original</th>
+                        <th>Corrected</th>
+                        <th>Tokens</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in correction_history %}
+                    <tr>
+                        <td>{{ item.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ item.original }}</td>
+                        <td>{{ item.corrected|safe }}</td>
+                        <td>{{ item.token_cost }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% else %}
             <p>No history yet.</p>
-            {% endfor %}
+            {% endif %}
         </div>
     </aside>
 </div>
@@ -116,6 +149,31 @@
     background: #ffffff;
     padding: 20px;
     border-radius: 10px;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.95rem;
+}
+
+.history-table th,
+.history-table td {
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+}
+
+.history-table th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+}
+
+.history-table td {
+    background-color: #ffffff;
+    word-wrap: break-word;
 }
 
 .input-form textarea {
