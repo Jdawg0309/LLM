@@ -1656,7 +1656,6 @@ button:hover {
     }
 }
 
-<<<<<<< HEAD
 /* Selection styles */
 .selection-hint {
     color: #666;
@@ -1885,7 +1884,6 @@ button:hover {
         max-width: none;
     }
 }
-=======
 /* Center the Blacklist Section */
 .dashboard-card {
     display: flex;
@@ -2078,4 +2076,3 @@ button:hover {
 .blacklist-table .status.rejected {
     color: #f44336; /* Red for rejected */
 }
->>>>>>> rajiv

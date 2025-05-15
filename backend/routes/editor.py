@@ -176,7 +176,6 @@ def save_correction(original, corrected, correction_type, tokens=0):
     db.session.commit()
     return correction
 
-<<<<<<< HEAD
 import difflib
 
 @editor_bp.route('/self-correct', methods=['POST'])
@@ -226,7 +225,6 @@ def self_correct():
         "corrected": highlighted_text,
         "token_cost": token_cost
     })
-=======
 def process_input(user_id, input_text):
     # Fetch all accepted blacklisted words for the user
     blacklisted_words = Blacklist.query.filter_by(status='approved').all()
@@ -247,4 +245,3 @@ def process_input(user_id, input_text):
         db.session.commit()
 
     return input_text, tokens_charged
->>>>>>> rajiv
