@@ -56,6 +56,15 @@
                 </div>
 
                 <div class="input-area">
+                     <!-- File Upload (left side) -->
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <label for="file-input" style="cursor:pointer; color:#2563eb; font-size:1.2rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-file-upload"></i> 
+                        </label>
+                        <input type="file" id="file-input" accept=".txt" style="display:none;">
+                        <span id="file-name" style="font-size:0.85rem; color:#888;"></span>
+                        
+                    </div>
                     <textarea id="text-input" 
                               {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
                               placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
@@ -98,7 +107,50 @@ document.getElementById('self-correct').addEventListener('click', function(e) {
     e.preventDefault();
     processText('self');
 });
+let uploadedFile = null;
 
+document.getElementById('file-input').addEventListener('change', function(e) {
+    uploadedFile = e.target.files[0] || null;
+    document.getElementById('file-name').textContent = uploadedFile ? uploadedFile.name : '';
+});
+document.querySelector('label[for="file-input"]').addEventListener('click', function() {
+    document.getElementById('file-input').click();
+});
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const fileNameSpan = document.getElementById('file-name');
+    if (file) {
+        fileNameSpan.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            document.getElementById('text-input').value = evt.target.result;
+            // Trigger input event to update word counter and warnings
+            document.getElementById('text-input').dispatchEvent(new Event('input'));
+        };
+        reader.readAsText(file);
+    } else {
+        fileNameSpan.textContent = '';
+    }
+});
+
+document.querySelector('label[for="file-input"]').addEventListener('click', function() {
+    document.getElementById('file-input').click();
+});
+
+  // If a file is uploaded, read it and send its content
+    if (uploadedFile) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            sendCorrection(evt.target.result, correctionType);
+            // // Remove file after sending
+            // uploadedFile = null;
+            // document.getElementById('file-input').value = '';
+            // document.getElementById('file-name').textContent = '';
+        };
+        reader.readAsText(uploadedFile);
+    } else {
+        sendCorrection(input.value.trim(), correctionType);
+    }
 
 function processText(correctionType) {
     // Add authentication check
