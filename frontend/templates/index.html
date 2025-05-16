@@ -61,7 +61,7 @@
     {% endif %}
 
 
-    <main class="center-editor">
+    <main class="center-editor" style="min-width: 600px;">
         <h2><i class="fas fa-robot"></i> LLMScribe Assistant</h2>
 
         <div id="correction-results">
@@ -86,10 +86,10 @@
 
 
             <div class="button-group">
-                <button id="llm-correct"><i class="fas fa-robot"></i> AI Correct</button>
-                <button id="self-correct"><i class="fas fa-user-edit"></i> Self Correct</button>
+                <button id="llm-correct" class="correction-actions"><i class="fas fa-robot"></i> AI Correct</button>
+                <button id="self-correct" class="correction-actions"><i class="fas fa-user-edit"></i> Self Correct</button>
                 {% if current_user.user_type == 'paid' %}
-                <button id="save-corrected-btn"><i class="fas fa-save"></i> Save</button>
+                <button id="save-corrected-btn" class="correction-actions"><i class="fas fa-save"></i> Save</button>
                 {% endif %}
             </div>
 

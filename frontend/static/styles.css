@@ -153,13 +153,14 @@ body {
     color: #667eea;
 }
 
-/* Main Content Styles */
 main {
-    padding: 0 20px;
-    margin: 0 auto;
-    max-width: 1000px;
+    box-sizing: border-box;
     min-height: 70vh;
+    max-width: 90vw;
+    margin: auto;
+    max-height: 100vh;
 }
+
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
@@ -240,6 +241,7 @@ p {
     }
 
     main {
+
         padding: 20px 10px;
     }
 
@@ -651,8 +653,10 @@ button:hover {
 
 .correction-actions {
     display: flex;
+    align-items: center;
     gap: 1rem;
     margin-top: 1rem;
+    width: 200px;
 }
 
 .correction-actions button {
@@ -873,7 +877,7 @@ button:hover {
 
 .three-column-layout {
     display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     padding: 20px;
 }
@@ -889,6 +893,8 @@ button:hover {
     background: #ffffff;
     padding: 20px;
     border-radius: 10px;
+    padding: 30px;
+
 }
 
 .history-table {
@@ -999,6 +1005,9 @@ button:hover {
 }
 
 .button-group button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-top: 10px;
     margin-right: 10px;
     padding: 10px 15px;
