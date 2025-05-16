@@ -65,6 +65,13 @@
                 {% else %}
                     <p>No collaborators yet.</p>
                 {% endif %}
+                <!-- Invite Collaborators Form -->
+                <form method="POST" style="margin-top: 10px;">
+                    <input type="hidden" name="invite_user" value="1">
+                    <input type="hidden" name="text_file_id" value="{{ file.id }}">
+                    <input type="email" name="invitee_email" placeholder="Invitee Email" required>
+                    <button type="submit">Invite Collaborator</button>
+                </form>
             </li>
         {% endfor %}
     </ul>

@@ -298,6 +298,20 @@ def collab():
         flash('Only paid or super users can access this page.', 'error')
         return redirect(url_for('main.home'))
 
+    # Handle text file creation
+    if request.method == 'POST' and 'create_text_file' in request.form:
+        name = request.form.get('name').strip()
+        content = request.form.get('content').strip()
+
+        if not name or not content:
+            flash('Both name and content are required.', 'error')
+        else:
+            # Save the text file to the database
+            text_file = TextFile(name=name, content=content, owner_id=current_user.id)
+            db.session.add(text_file)
+            db.session.commit()
+            flash('Text file created successfully.', 'success')
+
     # Handle file deletion
     if request.method == 'POST' and 'delete_file' in request.form:
         text_file_id = request.form.get('text_file_id')
@@ -311,6 +325,27 @@ def collab():
             db.session.delete(text_file)
             db.session.commit()
             flash('Text file deleted successfully.', 'success')
+
+    # Handle invitations
+    if request.method == 'POST' and 'invite_user' in request.form:
+        invitee_email = request.form.get('invitee_email').strip()
+        text_file_id = request.form.get('text_file_id')
+
+        # Find the invitee
+        invitee = User.query.filter_by(email=invitee_email, user_type='paid').first()
+        if not invitee:
+            flash('The invitee must be a paid user.', 'error')
+        else:
+            # Check if the text file exists and belongs to the inviter
+            text_file = TextFile.query.filter_by(id=text_file_id, owner_id=current_user.id).first()
+            if not text_file:
+                flash('Invalid text file.', 'error')
+            else:
+                # Create an invitation
+                invitation = Invitation(inviter_id=current_user.id, invitee_id=invitee.id, text_file_id=text_file.id)
+                db.session.add(invitation)
+                db.session.commit()
+                flash(f'Invitation sent to {invitee.email}.', 'success')
 
     # Fetch the user's text files (owned or collaborated on)
     owned_files = TextFile.query.filter_by(owner_id=current_user.id).all()
