@@ -124,10 +124,22 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-        <p>No history yet.</p>
-        {% endif %}
-    </div>
+        <div class="pagination-controls" style="margin-top: 15px; text-align: center;">
+                {% if correction_history.has_prev %}
+                <a href="{{ url_for('main.home', page=correction_history.prev_num) }}" class="btn btn-sm">← Previous</a>
+                {% endif %}
+
+                <span style="margin: 0 10px;">Page {{ correction_history.page }} of {{ correction_history.pages }}</span>
+
+                {% if correction_history.has_next %}
+                <a href="{{ url_for('main.home', page=correction_history.next_num) }}" class="btn btn-sm">Next →</a>
+                {% endif %}
+            </div>
+
+            {% else %}
+            <p>No history yet.</p>
+            {% endif %}
+        </div>
 </aside>
 
 </div>

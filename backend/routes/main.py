@@ -8,18 +8,25 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def home():
     if current_user.is_authenticated:
+        page = request.args.get('page', 1, type=int)
+        per_page = 5
+
         correction_count = CorrectionHistory.query.filter_by(user_id=current_user.id).count()
         word_count = db.session.query(db.func.sum(CorrectionHistory.tokens_used))\
             .filter_by(user_id=current_user.id).scalar() or 0
         user_blacklist = Blacklist.query.filter_by(submitted_by=current_user.id).all()
-        correction_history = CorrectionHistory.query.filter_by(user_id=current_user.id)\
-                                .order_by(CorrectionHistory.timestamp.desc())\
-                                .limit(5).all()
-        return render_template('index.html', 
-                             correction_count=correction_count,
-                             word_count=word_count,
-                             user_blacklist=user_blacklist, correction_history=correction_history)
+
+        paginated_history = CorrectionHistory.query.filter_by(user_id=current_user.id)\
+            .order_by(CorrectionHistory.timestamp.desc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
+
+        return render_template('index.html',
+                               correction_count=correction_count,
+                               word_count=word_count,
+                               user_blacklist=user_blacklist,
+                               correction_history=paginated_history)
     return render_template('index.html')
+
 
 @main_bp.route('/pricing')
 def pricing():

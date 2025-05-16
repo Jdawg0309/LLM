@@ -1039,10 +1039,12 @@ button:hover {
         padding: 20px;
         border-radius: 8px;
         border: 1px solid #ddd;
-        height: fit-content;
-        max-height: 80vh;
-        overflow-y: auto;
+        height: auto; /* allow height to expand */
+        max-height: none; /* remove limit */
+        overflow-y: visible; /* remove scroll */
+        width: 100%;
     }
+
 
     .history-sidebar h3 {
         margin-bottom: 15px;
