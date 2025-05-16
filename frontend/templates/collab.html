@@ -52,14 +52,15 @@
 {% if text_files %}
     <ul>
         {% for file in text_files %}
-            <li>
+            <li style="margin-bottom: 2rem;">
                 <strong>{{ file.name }}</strong> - {{ file.content }}
                 <form method="POST" style="display: inline;">
                     <input type="hidden" name="delete_file" value="1">
                     <input type="hidden" name="text_file_id" value="{{ file.id }}">
                     <button type="submit" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
                 </form>
-                <br>
+
+                <br><br>
                 <strong>Collaborators:</strong>
                 {% if file_collaborators[file.id] %}
                     <ul>
@@ -70,10 +71,19 @@
                 {% else %}
                     <p>No collaborators yet.</p>
                 {% endif %}
+
+                <!-- ✅ Invite Collaborator Form -->
+                <form method="POST" style="margin-top: 1rem;">
+                    <input type="hidden" name="invite_user" value="1">
+                    <input type="hidden" name="text_file_id" value="{{ file.id }}">
+                    <input type="email" name="invitee_email" placeholder="Invitee Email" required>
+                    <button type="submit">Invite Collaborator</button>
+                </form>
             </li>
         {% endfor %}
     </ul>
 {% else %}
     <p>No text files found.</p>
 {% endif %}
+
 {% endblock %}
