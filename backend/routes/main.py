@@ -327,6 +327,13 @@ def collab():
         else:
             # Delete associated collaborations first
             Collaboration.query.filter_by(text_file_id=text_file.id).delete()
+            # Delete associated invitations first
+            Invitation.query.filter_by(text_file_id=text_file.id).delete()
+
+            # Then delete collaborations
+            Collaboration.query.filter_by(text_file_id=text_file.id).delete()
+
+            # Finally, delete the text file
             db.session.delete(text_file)
             db.session.commit()
             flash('Text file deleted successfully.', 'success')
