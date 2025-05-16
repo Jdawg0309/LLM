@@ -13,8 +13,13 @@
                 <form method="POST" style="display: inline;">
                     <input type="hidden" name="respond_invitation" value="1">
                     <input type="hidden" name="invitation_id" value="{{ invite.id }}">
-                    <button type="submit" name="response" value="accept">Accept</button>
-                    <button type="submit" name="response" value="reject">Reject</button>
+                    <form method="POST" action="{{ url_for('main.respond_invitation', invitation_id=invite.id, response='accept') }}" style="display: inline;">
+                        <button type="submit" class="btn accept">Accept</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.respond_invitation', invitation_id=invite.id, response='reject') }}" style="display: inline;">
+                        <button type="submit" class="btn reject">Reject</button>
+                    </form>
+
                 </form>
             </li>
         {% endfor %}

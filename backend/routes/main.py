@@ -266,6 +266,7 @@ def respond_invitation(invitation_id, response):
 
     if response == 'accept':
         # Update the invitation status
+        print('Processing invitation acceptance...')
         invitation.status = 'accepted'
 
         # Add the invitee as a collaborator on the text file
