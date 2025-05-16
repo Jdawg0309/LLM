@@ -2440,3 +2440,140 @@ button:hover {
 .btn-reject-all:hover {
     background: #c82333;
 }
+
+.collab-container {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.08), 0 1.5px 4px rgba(118, 75, 162, 0.04);
+    max-width: 900px;
+    margin: 40px auto 60px auto;
+    padding: 32px 28px 24px 28px;
+    min-height: 70vh;
+}
+
+.collab-container h1, .collab-container h2 {
+    color: #5c4adb;
+    margin-bottom: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.collab-container h2 {
+    font-size: 1.25rem;
+    margin-top: 2rem;
+}
+
+.collab-container ul {
+    list-style: none;
+    padding: 0;
+}
+
+.collab-container li {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1rem;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.04);
+}
+
+.collab-container strong {
+    color: #764ba2;
+}
+
+.collab-container form {
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+.collab-container input[type="email"], 
+.collab-container input[type="text"], 
+.collab-container textarea {
+    padding: 10px;
+    border: 1px solid #c3cbe9;
+    border-radius: 6px;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    background: #f4f6fb;
+    transition: border-color 0.2s;
+}
+
+.collab-container input[type="email"]:focus, 
+.collab-container input[type="text"]:focus, 
+.collab-container textarea:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+.collab-container button,
+.collab-container .btn,
+.collab-container .btn.accept,
+.collab-container .btn.reject {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.07);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.collab-container button:hover,
+.collab-container .btn:hover,
+.collab-container .btn.accept:hover {
+    background: linear-gradient(135deg, #5a6fd1, #5e3a7e);
+}
+
+.collab-container .btn.reject {
+    background: linear-gradient(135deg, #f44336, #e53935);
+}
+
+.collab-container .btn.reject:hover {
+    background: linear-gradient(135deg, #c82333, #b71c1c);
+}
+
+.collab-container .collaborators-list {
+    margin: 0.5rem 0 0.5rem 0;
+    padding-left: 1.2rem;
+}
+
+.collab-container .collaborators-list li {
+    background: none;
+    border: none;
+    padding: 0.2rem 0;
+    color: #2563eb;
+    font-size: 0.97rem;
+}
+
+.collab-container .no-collaborators {
+    color: #888;
+    font-style: italic;
+    margin: 0.5rem 0;
+}
+
+.collab-container hr {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 2rem 0;
+}
+
+@media (max-width: 700px) {
+    .collab-container {
+        padding: 12px 2vw 10px 2vw;
+    }
+    .collab-container h1 {
+        font-size: 1.3rem;
+    }
+    .collab-container h2 {
+        font-size: 1.05rem;
+    }
+}
