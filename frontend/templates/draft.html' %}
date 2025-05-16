@@ -3,149 +3,276 @@
 {% block title %}LLMScribe - Text Editor{% endblock %}
 
 {% block content %}
-<div class="three-column-layout">
+<div class="container dashboard-layout">
     {% if current_user.is_authenticated %}
-    <aside class="left-sidebar">
-        <table class="profile-table">
-            <thead>
-                <tr>
-                    <th colspan="2"><i class="fas fa-user-circle"></i> User Profile</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Username</strong></td>
-                    <td>{{ current_user.username }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Email</strong></td>
-                    <td>{{ current_user.email }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Status</strong></td>
-                    <td><span class="user-badge {{ current_user.user_type }}">{{ current_user.user_type|title }} User</span></td>
-                </tr>
-                <tr>
-                    <td><strong>Tokens</strong></td>
-                    <td><span id="token-balance">{{ current_user.balance }}</span></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="blacklist-section">
-            <h4><i class="fas fa-ban"></i> Blacklist a Word</h4>
-            <form action="/blacklist_word" method="POST" class="blacklist-form">
-                <input type="text" id="blacklist-word" name="word" placeholder="Enter a word" required>
-                <button type="submit">Submit</button>
-            </form>
-
-            <h4 style="margin-top: 1rem;"><i class="fas fa-list"></i> Blacklisted Words</h4>
-            <table class="blacklist-table">
-                <thead>
-                    <tr>
-                        <th>Word</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for word in user_blacklist %}
-                    <tr>
-                        <td>{{ word.word }}</td>
-                        <td class="{{ word.status }}">{{ word.status|title }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="sidebar">
+            <div class="dashboard-card">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3>{{ current_user.username }}</h3>
+                        <p class="user-email">{{ current_user.email }}</p>
+                        <div class="user-type-badge {{ current_user.user_type }}">
+                            {{ current_user.user_type|title }} User
+                        </div>
+                    </div>
+                </div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-coins"></i>
+                        <div class="stat-details">
+                            <span class="stat-value" id="token-balance">{{ current_user.balance }}</span>
+                            <span class="stat-label">Tokens Available</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="dashboard-card">
+                <h3>Blacklisted Words</h3>
+                <form action="/blacklist_word" method="POST" class="blacklist-form">
+                    <div class="form-group">
+                        <label for="blacklist-word">Enter a word to blacklist:</label>
+                        <input type="text" id="blacklist-word" name="word" placeholder="Enter a word" required>
+                    </div>
+                    <button type="submit" class="btn">Submit</button>
+                </form>
+                <div class="blacklist-scroll">
+                    <h4>Your Submitted Words</h4>
+                    <ul id="blacklist-words">
+                        {% for word in user_blacklist %}
+                            <li>
+                                <span class="blacklist-word">{{ word.word }}</span>
+                                <span class="blacklist-status {{ word.status }}">{{ word.status|title }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
-    </aside>
     {% endif %}
 
+    <div class="main-content">
+        <div class="editor-container">
+            <div class="chatbot-header">
+                <h2>
+                    <i class="fas fa-robot"></i>
+                    LLMScribe Assistant
+                    <i class="fas fa-chevron-down"></i>
+                </h2>
+            </div>
 
-    <main class="center-editor">
-        <h2><i class="fas fa-robot"></i> LLMScribe Assistant</h2>
+            <div class="chat-area">
+                <div class="messages-container" id="correction-results">
+                    {% if current_user.is_authenticated %}
+                        <div class="bot-message">
+                            Hello {{ current_user.username }}! Please enter your text for correction.
+                        </div>
+                    {% else %}
+                        <div class="bot-message">
+                            Welcome to LLMScribe. Please log in to get started.
+                        </div>
+                    {% endif %}
+                </div>
 
-        <div id="correction-results">
-            {% if current_user.is_authenticated %}
-            <div class="bot-message">Hello {{ current_user.username }}! Please enter your text for correction.</div>
-            {% else %}
-            <div class="bot-message">Welcome to LLMScribe. Please log in to get started.</div>
-            {% endif %}
+                <div class="input-area">
+                     <!-- File Upload (left side) -->
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <label for="file-input" style="cursor:pointer; color:#2563eb; font-size:1.2rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-file-upload"></i> 
+                        </label>
+                        <input type="file" id="file-input" accept=".txt" style="display:none;">
+                        <span id="file-name" style="font-size:0.85rem; color:#888;"></span>
+                        
+                    </div>
+                    
+                    <!-- Original Input -->
+                    <div class="form-block">
+                        <label for="text-input"><strong>Original Text:</strong></label>
+                        <textarea id="text-input"
+                                {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %}
+                                placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
+                        
+                        <!-- Main Action Buttons -->
+                        <div class="action-bar button-row">
+                            <button id="llm-correct" class="action-button ai-correct">
+                                <i class="fas fa-robot"></i> AI Correct
+                            </button>
+                            <button id="self-correct" class="action-button self-correct">
+                                <i class="fas fa-user-edit"></i> Self Correct
+                            </button>
+                            {% if current_user.user_type == 'paid' %}
+                                <button id="save-corrected-btn" class="send-button" style="background: #0d9488;">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Self-Correct Block -->
+                    <div id="self-correct-box" class="form-block" style="display: none;">
+                        <label for="self-correct-input"><strong>Self-Corrected Version:</strong></label>
+                        <textarea id="self-correct-input" placeholder="Make your manual corrections here..."></textarea>
+                        <div class="button-row">
+                            <button id="submit-self-correct" class="send-button">
+                                <i class="fas fa-check-circle"></i> Submit Corrections
+                            </button>
+                        </div>
+                    </div>
+                        
+
+                </div>
+
+
+                {% if current_user.user_type == 'free' %}
+                    <div id="word-limit-warning" class="warning-message">
+                        ⚠️ Warning: Free users are limited to 20 words. Exceeding this limit will result in immediate logout and a 3-minute cooldown period.
+                    </div>
+                {% endif %}
+
+                <div class="word-counter-container">
+                    <span class="word-counter">0/{% if current_user.user_type == 'free' %}20{% else %}∞{% endif %}</span>
+                </div>
+            </div>
         </div>
-
-        <div class="input-form">
-            <textarea id="text-input" {% if current_user.user_type == 'free' %}data-max-words="20"{% endif %} placeholder="{% if current_user.user_type == 'free' %}Enter text (max 20 words){% else %}Enter your text here...{% endif %}"></textarea>
-
-            <div id="self-correct-box" style="display:none;">
-                <textarea id="self-correct-input" placeholder="Self-corrected version..."></textarea>
-                <button id="submit-self-correct"><i class="fas fa-check-circle"></i> Submit Corrections</button>
-            </div>
-
-            <label for="file-input"><i class="fas fa-upload"></i> Upload</label>
-            <input type="file" id="file-input" style="display:none;">
-            <span id="file-name"></span>
-
-
-            <div class="button-group">
-                <button id="llm-correct"><i class="fas fa-robot"></i> AI Correct</button>
-                <button id="self-correct"><i class="fas fa-user-edit"></i> Self Correct</button>
-                {% if current_user.user_type == 'paid' %}
-                <button id="save-corrected-btn"><i class="fas fa-save"></i> Save</button>
-                <span id="save-error" style="color: red; display: none;">Error saving file</span>
-                {% else %}
-                <button id="save-corrected-btn" disabled><i class="fas fa-save"></i> Save</button>
-                {% endif %}
-            </div>
-
-            {% if current_user.user_type == 'free' %}
-            <div id="word-limit-warning">⚠️ Free users are limited to 20 words.</div>
-            {% endif %}
-            <div class="word-counter">0/{% if current_user.user_type == 'free' %}20{% else %}&infin;{% endif %}</div>
-        </div>
-    </main>
-
-    <aside class="history-sidebar">
-    <h3><i class="fas fa-history"></i> Correction History</h3>
-    <div class="history-list">
-        {% if correction_history %}
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Original</th>
-                    <th>Corrected</th>
-                    <th>Tokens</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in correction_history %}
-                <tr>
-                    <td>{{ item.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>{{ item.original_text|truncate(30) }}</td>
-                    <td>{{ item.corrected_text|safe|truncate(30) }}</td>
-                    <td>{{ item.tokens_used }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-            <div class="pagination-controls" style="margin-top: 15px; text-align: center;">
-                {% if correction_history.has_prev %}
-                <a href="{{ url_for('main.home', page=correction_history.prev_num) }}" class="btn btn-sm">← Previous</a>
-                {% endif %}
-
-                <span style="margin: 0 10px;">Page {{ correction_history.page }} of {{ correction_history.pages }}</span>
-
-                {% if correction_history.has_next %}
-                <a href="{{ url_for('main.home', page=correction_history.next_num) }}" class="btn btn-sm">Next →</a>
-                {% endif %}
-            </div>
-
-            {% else %}
-            <p>No history yet.</p>
-            {% endif %}
     </div>
-</aside>
-
 </div>
+
+<style>
+    .main-content {
+        padding: 30px 20px;
+    }
+
+    .form-block {
+        margin-bottom: 20px;
+    }
+
+    .input-area textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin-top: 10px;
+    }
+
+    .send-button {
+        background-color: #5b3cc4;
+        color: white;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .send-button:hover {
+        background-color: #452a9e;
+    }
+
+    .correction-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .corrected-text mark.correction {
+        background-color: #ffc107;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    .word-counter-container {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        text-align: right;
+        color: #555;
+    }
+
+    .warning-message {
+        background-color: #fff3cd;
+        padding: 10px;
+        border-left: 4px solid #ffc107;
+        margin-top: 15px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    .chatbot-header {
+        background-color: #5b3cc4;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .input-area {
+    margin-top: 25px;
+}
+
+.form-block {
+    margin-bottom: 20px;
+}
+
+.input-area textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.send-button {
+    background-color: #5b3cc4;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.send-button:hover {
+    background-color: #452a9e;
+}
+
+</style>
+
 
 <script>
 // Button event bindings
