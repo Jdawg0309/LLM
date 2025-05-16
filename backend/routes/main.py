@@ -331,10 +331,13 @@ def collab():
         invitee_email = request.form.get('invitee_email').strip()
         text_file_id = request.form.get('text_file_id')
 
-        # Find the invitee
-        invitee = User.query.filter_by(email=invitee_email, user_type='paid').first()
+        # Find the invitee (allow both 'paid' and 'super' users)
+        invitee = User.query.filter(
+            (User.email == invitee_email) & (User.user_type.in_(['paid', 'super']))
+        ).first()
+
         if not invitee:
-            flash('The invitee must be a paid user.', 'error')
+            flash('The invitee must be a paid or super user.', 'error')
         else:
             # Check if the text file exists and belongs to the inviter
             text_file = TextFile.query.filter_by(id=text_file_id, owner_id=current_user.id).first()
