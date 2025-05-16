@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import current_user, login_required
-from backend.models import User, TokenTransaction, Blacklist, CorrectionHistory  # Updated import path
+from backend.models import User, TokenTransaction, Blacklist, CorrectionHistory, Invitation, Collaboration, TextFile  # Updated import path
 from backend import db
 
 main_bp = Blueprint('main', __name__)
@@ -224,3 +224,115 @@ def process_user_input():
 
     flash(f'Your input has been processed. {tokens_charged} tokens were charged.', 'success')
     return render_template('result.html', processed_text=processed_text)
+
+@main_bp.route('/invite', methods=['POST'])
+@login_required
+def invite():
+    if current_user.user_type != 'paid':
+        flash('Only paid users can send invitations.', 'error')
+        return redirect(url_for('main.home'))
+
+    invitee_email = request.form.get('invitee_email').strip()
+    text_file_id = request.form.get('text_file_id')
+
+    # Find the invitee
+    invitee = User.query.filter_by(email=invitee_email, user_type='paid').first()
+    if not invitee:
+        flash('The invitee must be a paid user.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Check if the text file exists and belongs to the inviter
+    text_file = TextFile.query.filter_by(id=text_file_id, owner_id=current_user.id).first()
+    if not text_file:
+        flash('Invalid text file.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Create an invitation
+    invitation = Invitation(inviter_id=current_user.id, invitee_id=invitee.id, text_file_id=text_file.id)
+    db.session.add(invitation)
+    db.session.commit()
+
+    flash(f'Invitation sent to {invitee.email}.', 'success')
+    return redirect(url_for('main.home'))
+
+@main_bp.route('/respond_invitation/<int:invitation_id>/<string:response>', methods=['POST'])
+@login_required
+def respond_invitation(invitation_id, response):
+    # Find the invitation
+    invitation = Invitation.query.get(invitation_id)
+    if not invitation or invitation.invitee_id != current_user.id:
+        flash('Invalid invitation.', 'error')
+        return redirect(url_for('main.home'))
+
+    if response == 'accept':
+        # Update the invitation status
+        invitation.status = 'accepted'
+
+        # Add the invitee as a collaborator on the text file
+        collaboration = Collaboration(user_id=current_user.id, text_file_id=invitation.text_file_id)
+        db.session.add(collaboration)
+        db.session.delete(invitation)  # Remove the invitation after acceptance
+        db.session.commit()
+
+        flash('You have accepted the invitation.', 'success')
+
+    elif response == 'reject':
+        # Update the invitation status
+        invitation.status = 'rejected'
+
+        # Deduct 3 tokens from the inviter
+        inviter = User.query.get(invitation.inviter_id)
+        if inviter:
+            inviter.balance -= 3
+            db.session.delete(invitation)  # Remove the invitation after rejection
+            db.session.commit()
+
+        flash('You have rejected the invitation. The inviter has been charged 3 tokens.', 'info')
+
+    return redirect(url_for('main.home'))
+
+@main_bp.route('/collab', methods=['GET', 'POST'])
+@login_required
+def collab():
+    if current_user.user_type not in ['paid', 'super']:
+        flash('Only paid or super users can access this page.', 'error')
+        return redirect(url_for('main.home'))
+
+    # Handle file deletion
+    if request.method == 'POST' and 'delete_file' in request.form:
+        text_file_id = request.form.get('text_file_id')
+        text_file = TextFile.query.filter_by(id=text_file_id, owner_id=current_user.id).first()
+
+        if not text_file:
+            flash('Invalid text file.', 'error')
+        else:
+            # Delete associated collaborations first
+            Collaboration.query.filter_by(text_file_id=text_file.id).delete()
+            db.session.delete(text_file)
+            db.session.commit()
+            flash('Text file deleted successfully.', 'success')
+
+    # Fetch the user's text files (owned or collaborated on)
+    owned_files = TextFile.query.filter_by(owner_id=current_user.id).all()
+    collaborated_files = TextFile.query.join(Collaboration, TextFile.id == Collaboration.text_file_id)\
+                                       .filter(Collaboration.user_id == current_user.id).all()
+    text_files = owned_files + collaborated_files
+
+    # Fetch collaborators for each file
+    file_collaborators = {
+        file.id: [
+            User.query.get(collab.user_id).email
+            for collab in Collaboration.query.filter_by(text_file_id=file.id).all()
+        ]
+        for file in text_files
+    }
+
+    # Fetch invitations for the logged-in user
+    invitations = db.session.query(
+        Invitation.id, Invitation.text_file_id, Invitation.status, User.username, User.email, TextFile.name
+    ).join(User, Invitation.inviter_id == User.id)\
+     .join(TextFile, Invitation.text_file_id == TextFile.id)\
+     .filter(Invitation.invitee_id == current_user.id)\
+     .all()
+
+    return render_template('collab.html', text_files=text_files, file_collaborators=file_collaborators, invitations=invitations)

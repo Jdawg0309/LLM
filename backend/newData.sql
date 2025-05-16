@@ -53,3 +53,33 @@ CREATE TABLE correction_history (
     FOREIGN KEY (user_id) REFERENCES `user`(id),
     INDEX idx_correction_type (correction_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE invitations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    inviter_id INT NOT NULL, -- The user who sent the invitation
+    invitee_id INT NOT NULL, -- The user who received the invitation
+    text_file_id INT NOT NULL, -- The shared text file
+    status ENUM('pending', 'accepted', 'rejected') NOT NULL DEFAULT 'pending', -- Status of the invitation
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (inviter_id) REFERENCES user(id),
+    FOREIGN KEY (invitee_id) REFERENCES user(id),
+    FOREIGN KEY (text_file_id) REFERENCES text_files(id)
+);
+
+CREATE TABLE collaborations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL, -- The collaborator
+    text_file_id INT NOT NULL, -- The shared text file
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user(id),
+    FOREIGN KEY (text_file_id) REFERENCES text_files(id)
+);
+
+CREATE TABLE text_files (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    owner_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES user(id)
+);
