@@ -265,17 +265,21 @@ def respond_invitation(invitation_id, response):
         return redirect(url_for('main.home'))
 
     if response == 'accept':
-        # Update the invitation status
         print('Processing invitation acceptance...')
         invitation.status = 'accepted'
 
-        # Add the invitee as a collaborator on the text file
-        collaboration = Collaboration(user_id=current_user.id, text_file_id=invitation.text_file_id)
-        db.session.add(collaboration)
-        db.session.delete(invitation)  # Remove the invitation after acceptance
+        # Only add if not already a collaborator
+        existing = Collaboration.query.filter_by(user_id=current_user.id, text_file_id=invitation.text_file_id).first()
+        if not existing:
+            collaboration = Collaboration(user_id=current_user.id, text_file_id=invitation.text_file_id)
+            db.session.add(collaboration)
+
+        db.session.delete(invitation)
         db.session.commit()
 
         flash('You have accepted the invitation.', 'success')
+        return redirect(url_for('main.collab'))
+
 
     elif response == 'reject':
         # Update the invitation status
