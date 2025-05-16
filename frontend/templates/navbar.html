@@ -7,6 +7,9 @@
             <li><a href="{{ url_for('main.admin') }}">Admin</a></li>
         {% endif %}
         <li><a href="{{ url_for('main.pricing') }}">Pricing</a></li>
+        {% if current_user.is_authenticated and current_user.user_type in ['paid', 'super'] %}
+            <li><a href="{{ url_for('main.collab') }}">Collab</a></li>
+        {% endif %}
         {% if current_user.is_authenticated %}
             <li>
                 <form action="{{ url_for('auth.logout') }}" method="GET" style="display: inline;">

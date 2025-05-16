@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Collaboration</h1>
+
+<!-- Section for invitations -->
+<h2>Invitations</h2>
+{% if invitations %}
+    <ul>
+        {% for invite in invitations %}
+            <li>
+                <strong>{{ invite.name }}</strong> (Invited by: {{ invite.username }} - {{ invite.email }})
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="respond_invitation" value="1">
+                    <input type="hidden" name="invitation_id" value="{{ invite.id }}">
+                    <button type="submit" name="response" value="accept">Accept</button>
+                    <button type="submit" name="response" value="reject">Reject</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No invitations found.</p>
+{% endif %}
+
+<hr>
+
+<!-- Section for creating a text file -->
+<h2>Create Text File</h2>
+<form method="POST">
+    <input type="hidden" name="create_text_file" value="1">
+    <div>
+        <label for="name">File Name:</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div>
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" required></textarea>
+    </div>
+    <button type="submit">Create</button>
+</form>
+
+<hr>
+
+<!-- Section for listing text files -->
+<h2>My Text Files</h2>
+{% if text_files %}
+    <ul>
+        {% for file in text_files %}
+            <li>
+                <strong>{{ file.name }}</strong> - {{ file.content }}
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="delete_file" value="1">
+                    <input type="hidden" name="text_file_id" value="{{ file.id }}">
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
+                </form>
+                <br>
+                <strong>Collaborators:</strong>
+                {% if file_collaborators[file.id] %}
+                    <ul>
+                        {% for collaborator in file_collaborators[file.id] %}
+                            <li>{{ collaborator }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No collaborators yet.</p>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No text files found.</p>
+{% endif %}
+{% endblock %}
